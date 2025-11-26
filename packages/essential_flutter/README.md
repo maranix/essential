@@ -7,6 +7,7 @@ Flutter widgets, components, and services building on essential_dart for acceler
 - **Widgets**: Reusable UI components.
 - **Services**: Flutter-specific services.
 - **Architecture**: Patterns for clean Flutter architecture.
+- **ConditionalWrapper**: Conditionally wrap widgets without nested ternaries.
 - **Integration**: Seamlessly integrates with `essential_dart`.
 
 ## Getting started
@@ -23,5 +24,10 @@ dependencies:
 ```dart
 import 'package:essential_flutter/essential_flutter.dart';
 
-// Example usage
+// Conditionally wrap a widget
+ConditionalWrapper(
+  condition: isScrollable,
+  wrapper: (child) => SingleChildScrollView(child: child),
+  child: MyContent(),
+)
 ```
