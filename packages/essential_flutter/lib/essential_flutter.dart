@@ -5,6 +5,9 @@
 /// - **ConditionalWrapper**: Conditionally wrap a widget based on a boolean condition,
 ///   avoiding nested ternary operators.
 ///
+/// - **ScrollableBuilder**: Handle different loading and error states for scrollable widgets
+///   like ListView, GridView, etc. Supports loading, error, and data states with customizable builders.
+///
 /// Example:
 /// ```dart
 /// import 'package:essential_flutter/essential_flutter.dart';
@@ -14,9 +17,22 @@
 ///   wrapper: (child) => SingleChildScrollView(child: child),
 ///   child: MyContent(),
 /// )
+///
+/// ScrollableBuilder<String>(
+///   data: items,
+///   isLoading: isLoading,
+///   error: error,
+///   dataBuilder: (context, items) => ListView.builder(
+///     itemCount: items.length,
+///     itemBuilder: (context, index) => ListTile(
+///       title: Text(items[index]),
+///     ),
+///   ),
+/// )
 /// ```
 library;
 
 export 'package:essential_dart/essential_dart.dart';
 
 export 'src/conditional_wrapper.dart';
+export 'src/scrollable_builder.dart';
