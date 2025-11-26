@@ -29,3 +29,16 @@ publish:
 	$(confirm)
 	@$(MAKE) publish_dart
 	@$(MAKE) publish_flutter
+
+
+# Apply dart fix to targets
+fix_dart:
+	dart fix packages/essential_dart --apply
+
+fix_flutter:
+	dart fix packages/essential_flutter --apply
+
+fix:
+	$(confirm)
+	@$(MAKE) fix_dart
+	@$(MAKE) fix_flutter
