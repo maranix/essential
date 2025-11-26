@@ -6,6 +6,8 @@ Flutter widgets, components, and services building on essential_dart for acceler
 
 - **ConditionalWrapper**: Conditionally wrap widgets without nested ternaries.
 - **ScrollableBuilder**: Handle loading and error states for scrollable widgets.
+- **Conditional**: Conditionally render widgets based on a boolean condition.
+- **Conditional.chain**: Chain multiple conditions for complex conditional rendering.
 
 ## Getting started
 
@@ -13,7 +15,7 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  essential_flutter: ^1.0.0
+  essential_flutter: ^1.1.0
 ```
 
 ## Usage
@@ -23,8 +25,6 @@ dependencies:
 Avoid nested ternary operators when conditionally wrapping widgets:
 
 ```dart
-import 'package:essential_flutter/essential_flutter.dart';
-
 ConditionalWrapper(
   condition: isScrollable,
   wrapper: (child) => SingleChildScrollView(child: child),
@@ -86,5 +86,40 @@ ScrollableBuilder<Product>(
       ),
     ],
   ),
+)
+```
+
+### Conditional
+
+Conditionally render widgets based on a boolean condition.
+
+```dart
+Conditional(
+  condition: isLoggedIn,
+  onTrue: const Text('Welcome back!'),
+  onFalse: OutlinedButton(
+    onPressed: () { /* handle login */ },
+    child: const Text('Please Log In'),
+  ),
+)
+```
+
+For more complex scenarios, you can use `Conditional.chain`:
+
+```dart
+enum UserStatus {
+  loading,
+  loggedIn,
+  loggedOut,
+  error,
+}
+
+Conditional.chain(
+  [
+    (status == UserStatus.loading, widget: const CircularProgressIndicator()),
+    (status == UserStatus.loggedIn, widget: const Text('Welcome back!')),
+    (status == UserStatus.loggedOut, widget: const Text('Please log in.')),
+  ],
+  fallback: const Text('An unexpected error occurred.'),
 )
 ```

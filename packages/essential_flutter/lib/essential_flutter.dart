@@ -34,5 +34,6 @@ library;
 
 export 'package:essential_dart/essential_dart.dart';
 
+export 'src/conditional.dart';
 export 'src/conditional_wrapper.dart';
 export 'src/scrollable_builder.dart';
