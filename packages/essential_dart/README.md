@@ -6,7 +6,6 @@ Reusable building blocks, patterns, and services for Dart to improve efficiency 
 
 - **Utilities**: Helper classes and common abstractions.
 - **Patterns**: Reusable code snippets to reduce boilerplate.
-- **Memoizer**: Cache results of expensive computations.
 
 ## Getting started
 

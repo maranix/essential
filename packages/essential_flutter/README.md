@@ -4,11 +4,9 @@ Flutter widgets, components, and services building on essential_dart for acceler
 
 ## Features
 
-- **Unified Access**: Re-exports all `essential_dart` utilities for seamless integration.
 - **Widgets**: Reusable UI components.
 - **Services**: Flutter-specific services.
-- **Architecture**: Patterns for clean Flutter architecture.
-- **ConditionalWrapper**: Conditionally wrap widgets without nested ternaries.
+- **Utilities**: Helpful utilities for Flutter development.
 
 ## Getting started
 
@@ -24,16 +22,9 @@ dependencies:
 ```dart
 import 'package:essential_flutter/essential_flutter.dart';
 
-// Access both Flutter widgets and Dart utilities with a single import
-
-// Use Flutter-specific widgets
 ConditionalWrapper(
   condition: isScrollable,
   wrapper: (child) => SingleChildScrollView(child: child),
   child: MyContent(),
 )
-
-// Access essential_dart utilities directly
-final memoizer = Memoizer<int>(computation: () => 42);
-final result = await memoizer.result; // 42
 ```
