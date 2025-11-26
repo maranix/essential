@@ -6,8 +6,8 @@ This workspace contains a collection of reusable building blocks designed to imp
 
 | Package | Description | Version |
 |---|---|---|
-| [essential_dart](./packages/essential_dart) | Reusable building blocks, patterns, and services for Dart. | 1.0.0 |
-| [essential_flutter](./packages/essential_flutter) | Flutter widgets, components, and services building on essential_dart. | 1.0.0 |
+| [essential_dart](./packages/essential_dart) | Reusable building blocks, patterns, and services for Dart. | 1.0.0+1 |
+| [essential_flutter](./packages/essential_flutter) | Flutter widgets, components, and services building on essential_dart. | 1.0.0+1 |
 
 ## Overview
 
@@ -17,7 +17,7 @@ It is available in two variants—one for pure Dart environments and one for Flu
 The Dart version offers language-level utilities such as helper classes, patterns, services, and common abstractions that streamline application logic. This includes features like sealed classes for representing UI or operation states (e.g., loading, loaded, failure) and other reusable code snippets aimed at reducing boilerplate and promoting consistency.
 
 ### essential_flutter
-The Flutter version builds on top of the Dart package by including all Dart utilities while adding Flutter-specific widgets, components, and services. These resources help accelerate UI development and encourage clean architectural practices through well-structured reusable widgets and ready-to-use patterns.
+The Flutter version builds on top of the Dart package by re-exporting all Dart utilities while adding Flutter-specific widgets, components, and services. This unified approach allows developers to access both Dart and Flutter utilities through a single import, accelerating UI development and encouraging clean architectural practices through well-structured reusable widgets and ready-to-use patterns.
 
 Together, these packages provide a unified toolkit that enhances developer experience, speeds up development velocity, and enforces maintainable, scalable coding practices across both Dart and Flutter projects.
 

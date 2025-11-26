@@ -1,6 +1,6 @@
 name: essential_flutter
 description: Flutter widgets, components, and services building on essential_dart for accelerated UI development.
-version: 1.0.0
+version: 1.0.0+1
 repository: https://github.com/maranix/essential
 issue_tracker: https://github.com/maranix/essential/issues
 
