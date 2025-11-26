@@ -4,10 +4,10 @@ This workspace contains a collection of reusable building blocks designed to imp
 
 ## Packages
 
-| Package | Description | Version |
-|---|---|---|
-| [essential_dart](./packages/essential_dart) | Reusable building blocks, patterns, and services for Dart. | 1.0.0+1 |
-| [essential_flutter](./packages/essential_flutter) | Flutter widgets, components, and services building on essential_dart. | 1.0.0+1 |
+| Package | Description | Version | Pub.dev |
+|---|---|---|---|
+| [essential_dart](./packages/essential_dart) | Reusable building blocks, patterns, and services for Dart. | 1.0.0+1 | [![Pub](https://img.shields.io/pub/v/essential_dart)](https://pub.dev/packages/essential_dart) |
+| [essential_flutter](./packages/essential_flutter) | Flutter widgets, components, and services building on essential_dart. | 1.0.0+1 | [![Pub](https://img.shields.io/pub/v/essential_flutter)](https://pub.dev/packages/essential_flutter) |
 
 ## Overview
 
