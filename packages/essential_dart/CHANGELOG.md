@@ -1,4 +1,4 @@
 ## 1.0.0
 
 - Initial release.
-- Added core utilities and patterns.
+- Added `Memoizer` utility for caching computation results.

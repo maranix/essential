@@ -17,6 +17,7 @@ topics:
 
 # Add regular dependencies here.
 dependencies:
+  async: ^2.13.0
   # path: ^1.9.0
 
 dev_dependencies:

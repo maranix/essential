@@ -7,6 +7,7 @@ Reusable building blocks, patterns, and services for Dart to improve efficiency 
 - **Sealed Classes**: Represent UI or operation states (e.g., loading, loaded, failure).
 - **Utilities**: Helper classes and common abstractions.
 - **Patterns**: Reusable code snippets to reduce boilerplate.
+- **Memoizer**: Cache results of expensive computations.
 
 ## Getting started
 
@@ -22,8 +23,10 @@ dependencies:
 ```dart
 import 'package:essential_dart/essential_dart.dart';
 
-// Example usage
-```
+// Example usage of Memoizer
+final memoizer = Memoizer<int>(computation: () => 42);
+final result = await memoizer.result; // 42
+
 
 ## Additional information
 
