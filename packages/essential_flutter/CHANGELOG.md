@@ -2,11 +2,10 @@
 
 - **Enhancement**: Re-exported `essential_dart` package for seamless access to all Dart utilities.
 - **Feature**: Added `ScrollableBuilder` widget for handling loading and error states in scrollable widgets.
-  - Supports 5 different states: loading, loaded, loading with data, error, and error with data
-  - Adaptive default widgets for iOS and Android
-  - Customizable loader positioning (start/end)
-  - Fully customizable builders for all states
-- Updated package metadata and documentation.
+  - Supports 5 different states: empty loading, empty error, busy (loading with data), busy error, and data.
+  - Fully customizable builders for all states with sensible defaults (no default widgets, just logic).
+  - Clean API with `itemBuilder`, `loadingBuilder`, `busyItemBuilder`, etc.
+  - Type-safe builders with nullable error handling.
 
 
 ## 1.0.0
