@@ -20,10 +20,10 @@ dry_run: dry_run_dart dry_run_flutter
 
 # Actual publish targets
 publish_dart:
-	dart pub -C packages/essential_dart publish
+	dart test packages/essential_dart && dart pub -C packages/essential_dart publish
 
 publish_flutter:
-	dart pub -C packages/essential_flutter publish
+	flutter test packages/essential_flutter && dart pub -C packages/essential_flutter publish
 
 publish:
 	$(confirm)
