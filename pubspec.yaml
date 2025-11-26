@@ -1,0 +1,13 @@
+name: essential_workspace
+
+description: >-
+  Monorepo for essential packages with examples.
+
+publish_to: none
+
+environment:
+    sdk: ^3.10.1
+
+workspace:
+  - packages/essential_dart
+  - packages/essential_flutter
