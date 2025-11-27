@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: GitHub Discussions
+    url: https://github.com/maranix/essential/discussions
+    about: Please ask and answer questions here.
+  - name: essential_dart on Pub.dev
+    url: https://pub.dev/packages/essential_dart
+    about: View the package on pub.dev
+  - name: essential_flutter on Pub.dev
+    url: https://pub.dev/packages/essential_flutter
+    about: View the package on pub.dev
