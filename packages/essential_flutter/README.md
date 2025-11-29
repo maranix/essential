@@ -123,3 +123,46 @@ Conditional.chain(
   fallback: const Text('An unexpected error occurred.'),
 )
 ```
+
+### Conditional.listenable
+
+Listen to a `ValueListenable` (e.g., `ValueNotifier`) and rebuild when the value changes:
+
+```dart
+final ValueNotifier<bool> _isLoggedIn = ValueNotifier(false);
+
+Conditional.listenable(
+  listenable: _isLoggedIn,
+  onTrue: const Text('Welcome back!'),
+  onFalse: const Text('Please Log In'),
+)
+```
+
+### ConditionalWrapper.listenable
+
+Listen to a `ValueListenable` and conditionally wrap a widget:
+
+```dart
+final ValueNotifier<bool> _isScrollable = ValueNotifier(false);
+
+ConditionalWrapper.listenable(
+  listenable: _isScrollable,
+  wrapper: (child) => SingleChildScrollView(child: child),
+  child: MyContent(),
+)
+```
+
+### ConditionalWrapper.stream
+
+Listen to a `Stream` and conditionally wrap a widget:
+
+```dart
+final Stream<bool> _isScrollableStream = Stream.value(true);
+
+ConditionalWrapper.stream(
+  stream: _isScrollableStream,
+  wrapper: (child) => SingleChildScrollView(child: child),
+  child: MyContent(),
+  initialData: false,
+)
+```

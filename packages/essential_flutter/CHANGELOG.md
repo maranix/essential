@@ -1,3 +1,9 @@
+## 1.2.0
+
+- **Feature**: Added `Conditional.listenable` for listening to `ValueListenable`.
+- **Feature**: Added `ConditionalWrapper.listenable` for listening to `ValueListenable`.
+- **Feature**: Added `ConditionalWrapper.stream` for listening to `Stream`.
+
 ## 1.1.0
 
 - **Feature**: Added `Conditional.chain` for complex conditional rendering.

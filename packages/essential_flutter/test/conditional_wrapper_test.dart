@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:essential_flutter/essential_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -140,6 +141,152 @@ void main() {
       expect(find.byType(Padding), findsOneWidget);
       expect(find.byType(ColoredBox), findsWidgets);
       expect(find.text('Nested'), findsOneWidget);
+    });
+  });
+
+  group('ConditionalWrapper.listenable', () {
+    testWidgets('updates when ValueListenable changes', (tester) async {
+      final notifier = ValueNotifier<bool>(true);
+      const wrapperKey = Key('wrapper');
+      const testKey = Key('test-child');
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ConditionalWrapper.listenable(
+            listenable: notifier,
+            wrapper: (child) => ColoredBox(
+              key: wrapperKey,
+              color: Colors.red,
+              child: child,
+            ),
+            child: const Text('Hello', key: testKey),
+          ),
+        ),
+      );
+
+      // Initial state: true -> wrapped
+      expect(find.byKey(wrapperKey), findsOneWidget);
+      expect(find.byKey(testKey), findsOneWidget);
+
+      notifier.value = false;
+      await tester.pump();
+
+      // Updated state: false -> not wrapped
+      expect(find.byKey(wrapperKey), findsNothing);
+      expect(find.byKey(testKey), findsOneWidget);
+    });
+
+    testWidgets('renders initial false state correctly', (tester) async {
+      final notifier = ValueNotifier<bool>(false);
+      const wrapperKey = Key('wrapper');
+      const testKey = Key('test-child');
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ConditionalWrapper.listenable(
+            listenable: notifier,
+            wrapper: (child) => ColoredBox(
+              key: wrapperKey,
+              color: Colors.red,
+              child: child,
+            ),
+            child: const Text('Hello', key: testKey),
+          ),
+        ),
+      );
+
+      // Initial state: false -> not wrapped
+      expect(find.byKey(wrapperKey), findsNothing);
+      expect(find.byKey(testKey), findsOneWidget);
+    });
+  });
+
+  group('ConditionalWrapper.stream', () {
+    testWidgets('updates when Stream emits new value', (tester) async {
+      final controller = StreamController<bool>();
+      const wrapperKey = Key('wrapper');
+      const testKey = Key('test-child');
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ConditionalWrapper.stream(
+            stream: controller.stream,
+            wrapper: (child) => ColoredBox(
+              key: wrapperKey,
+              color: Colors.red,
+              child: child,
+            ),
+            child: const Text('Hello', key: testKey),
+            initialData: true,
+          ),
+        ),
+      );
+
+      // Initial state: true -> wrapped
+      expect(find.byKey(wrapperKey), findsOneWidget);
+      expect(find.byKey(testKey), findsOneWidget);
+
+      controller.add(false);
+      await tester.pumpAndSettle();
+
+      // Updated state: false -> not wrapped
+      expect(find.byKey(wrapperKey), findsNothing);
+      expect(find.byKey(testKey), findsOneWidget);
+
+      await controller.close();
+    });
+
+    testWidgets('uses initialData correctly', (tester) async {
+      final controller = StreamController<bool>();
+      const wrapperKey = Key('wrapper');
+      const testKey = Key('test-child');
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ConditionalWrapper.stream(
+            stream: controller.stream,
+            wrapper: (child) => ColoredBox(
+              key: wrapperKey,
+              color: Colors.red,
+              child: child,
+            ),
+            child: const Text('Hello', key: testKey),
+            initialData: false,
+          ),
+        ),
+      );
+
+      // Initial state: false -> not wrapped
+      expect(find.byKey(wrapperKey), findsNothing);
+      expect(find.byKey(testKey), findsOneWidget);
+
+      await controller.close();
+    });
+
+    testWidgets('defaults initialData to false', (tester) async {
+      final controller = StreamController<bool>();
+      const wrapperKey = Key('wrapper');
+      const testKey = Key('test-child');
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ConditionalWrapper.stream(
+            stream: controller.stream,
+            wrapper: (child) => ColoredBox(
+              key: wrapperKey,
+              color: Colors.red,
+              child: child,
+            ),
+            child: const Text('Hello', key: testKey),
+          ),
+        ),
+      );
+
+      // Initial state: false (default) -> not wrapped
+      expect(find.byKey(wrapperKey), findsNothing);
+      expect(find.byKey(testKey), findsOneWidget);
+
+      await controller.close();
     });
   });
 }

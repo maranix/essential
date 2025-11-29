@@ -135,4 +135,46 @@ void main() {
       expect(find.byType(SizedBox), findsOneWidget);
     },
   );
+
+  group('Conditional.listenable', () {
+    testWidgets('updates when ValueListenable changes', (tester) async {
+      final notifier = ValueNotifier<bool>(true);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Conditional.listenable(
+            listenable: notifier,
+            onTrue: const Text('True'),
+            onFalse: const Text('False'),
+          ),
+        ),
+      );
+
+      expect(find.text('True'), findsOneWidget);
+      expect(find.text('False'), findsNothing);
+
+      notifier.value = false;
+      await tester.pump();
+
+      expect(find.text('False'), findsOneWidget);
+      expect(find.text('True'), findsNothing);
+    });
+
+    testWidgets('renders initial false state correctly', (tester) async {
+      final notifier = ValueNotifier<bool>(false);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Conditional.listenable(
+            listenable: notifier,
+            onTrue: const Text('True'),
+            onFalse: const Text('False'),
+          ),
+        ),
+      );
+
+      expect(find.text('False'), findsOneWidget);
+      expect(find.text('True'), findsNothing);
+    });
+  });
 }

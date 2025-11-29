@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 /// A type definition for a case in a conditional chain, pairing a boolean condition with a widget.
@@ -50,6 +51,14 @@ class Conditional extends StatelessWidget {
     required this.onTrue,
     this.onFalse = const SizedBox.shrink(),
   });
+
+  /// {@macro conditional.listenable}
+  const factory Conditional.listenable({
+    Key? key,
+    required ValueListenable<bool> listenable,
+    required Widget onTrue,
+    Widget onFalse,
+  }) = _ConditionalListenable;
 
   /// The condition to evaluate.
   final bool condition;
@@ -117,5 +126,43 @@ class Conditional extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return condition ? onTrue : onFalse;
+  }
+}
+
+/// {@template conditional.listenable}
+/// Creates a [Conditional] widget that listens to a [ValueListenable] (e.g., [ValueNotifier]).
+///
+/// The widget rebuilds whenever the [listenable] notifies its listeners.
+///
+/// ```dart
+/// final ValueNotifier<bool> _isLoggedIn = ValueNotifier(false);
+///
+/// Conditional.listenable(
+///   listenable: _isLoggedIn,
+///   onTrue: const Text('Welcome back!'),
+///   onFalse: const Text('Please Log In'),
+/// )
+/// ```
+/// {@endtemplate}
+class _ConditionalListenable extends Conditional {
+  /// {@macro conditional.listenable}
+  const _ConditionalListenable({
+    super.key,
+    required this.listenable,
+    required super.onTrue,
+    super.onFalse = const SizedBox.shrink(),
+  }) : super(condition: false);
+
+  final ValueListenable<bool> listenable;
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<bool>(
+      valueListenable: listenable,
+      builder: (context, value, _) => switch (value) {
+        true => onTrue,
+        false => onFalse,
+      },
+    );
   }
 }
