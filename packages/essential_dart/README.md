@@ -4,8 +4,8 @@ Reusable building blocks, patterns, and services for Dart to improve efficiency 
 
 ## Features
 
-- **Utilities**: Helper classes and common abstractions.
-- **Patterns**: Reusable code snippets to reduce boilerplate.
+- **Memoizer**: Cache results of expensive computations with lazy/eager execution and reset functionality.
+- **Task**: Type-safe state management for asynchronous operations with intuitive state transitions.
 
 ## Getting started
 
@@ -18,10 +18,91 @@ dependencies:
 
 ## Usage
 
+### Memoizer
+
+Cache expensive computations:
+
 ```dart
 import 'package:essential_dart/essential_dart.dart';
 
-// Example usage of Memoizer
-final memoizer = Memoizer<int>(computation: () => 42);
-final result = await memoizer.result; // 42
+final memoizer = Memoizer<int>(
+  computation: () => expensiveCalculation(),
+);
+
+final result = await memoizer.result; // Computed once, cached
+final again = await memoizer.result;  // Returns cached value
 ```
+
+### Task
+
+Manage asynchronous operation states with clean, type-safe transitions:
+
+```dart
+import 'package:essential_dart/essential_dart.dart';
+
+// Create a task in pending state
+var task = Task<String>.pending(label: 'fetch-users');
+
+// Transition to running
+task = task.toRunning();
+
+// Transition to success with data
+task = task.toSuccess('User data loaded');
+
+// Or handle failure
+task = task.toFailure(Exception('Network error'));
+
+// Retry after failure
+task = task.toRetrying();
+
+// Refresh with existing data
+task = task.toRefreshing();
+```
+
+#### Task States
+
+Tasks can be in one of six states:
+- **Pending**: Initial state, waiting to start
+- **Running**: Operation in progress
+- **Refreshing**: Reloading with previous data available
+- **Retrying**: Retrying after a failure
+- **Success**: Operation completed successfully
+- **Failure**: Operation failed with an error
+
+#### State Checking
+
+```dart
+if (task.state == TaskState.success) {
+  print('Data: ${(task as TaskSuccess<String>).data}');
+}
+
+// Or use convenience getters
+if (task.isSuccess) {
+  print('Success!');
+}
+```
+
+#### Chaining Transitions
+
+```dart
+final result = Task<int>.pending()
+    .toRunning()
+    .toSuccess(42)
+    .toRefreshing();
+```
+
+#### Data Transformation
+
+```dart
+// Transform data while preserving state
+final task = Task<int>.success(data: 42);
+final doubled = task.mapData((data) => data * 2);
+
+// Transform error
+final failure = Task<int>.failure(error: Exception('Error'));
+final wrapped = failure.mapError((e) => CustomError(e));
+```
+
+## License
+
+This project is licensed under the MIT License.
