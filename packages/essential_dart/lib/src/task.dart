@@ -71,7 +71,94 @@ sealed class Task<T> {
   final String? label;
   final Set<String> tags;
   final T? initialData;
+}
 
+final class TaskPending<T> extends Task<T> {
+  const TaskPending({
+    super.initialData,
+    super.label,
+    super.tags,
+  });
+
+  @override
+  TaskState get state => TaskState.pending;
+}
+
+final class TaskRunning<T> extends Task<T> {
+  const TaskRunning({
+    this.previousData,
+    super.initialData,
+    super.label,
+    super.tags,
+  });
+
+  final T? previousData;
+
+  @override
+  TaskState get state => TaskState.running;
+}
+
+final class TaskRefreshing<T> extends Task<T> {
+  const TaskRefreshing({
+    this.previousData,
+    super.initialData,
+    super.label,
+    super.tags,
+  });
+
+  final T? previousData;
+
+  @override
+  TaskState get state => TaskState.refreshing;
+}
+
+final class TaskRetrying<T> extends Task<T> {
+  const TaskRetrying({
+    this.previousData,
+    super.initialData,
+    super.label,
+    super.tags,
+  });
+
+  final T? previousData;
+
+  @override
+  TaskState get state => TaskState.retrying;
+}
+
+final class TaskSuccess<T> extends Task<T> {
+  const TaskSuccess({
+    required this.data,
+    super.initialData,
+    super.label,
+    super.tags,
+  });
+
+  final T data;
+
+  @override
+  TaskState get state => TaskState.success;
+}
+
+final class TaskFailure<T> extends Task<T> {
+  const TaskFailure({
+    required this.error,
+    this.stackTrace,
+    this.previousData,
+    super.initialData,
+    super.label,
+    super.tags,
+  });
+
+  final Object error;
+  final StackTrace? stackTrace;
+  final T? previousData;
+
+  @override
+  TaskState get state => TaskState.failure;
+}
+
+extension TaskInstancePropertiesX<T> on Task<T> {
   bool get isPending => state == TaskState.pending;
   bool get isRunning => state == TaskState.running;
   bool get isRefreshing => state == TaskState.refreshing;
@@ -87,7 +174,9 @@ sealed class Task<T> {
     TaskFailure(previousData: final d) => d ?? initialData,
     TaskPending() => initialData,
   };
+}
 
+extension TaskInstanceTransitionX<T> on Task<T> {
   /// Transitions this task to a pending state.
   ///
   /// Preserves label and tags. Optionally updates initialData.
@@ -167,7 +256,9 @@ sealed class Task<T> {
       tags: tags,
     );
   }
+}
 
+extension TaskInstanceTransformX<T> on Task<T> {
   /// Transform data for all states, producing Task<U>
   Task<U> mapData<U>(U Function(T data) transform) => switch (this) {
     TaskSuccess(data: final d) => TaskSuccess(
@@ -267,7 +358,9 @@ sealed class Task<T> {
       tags: tags,
     ),
   };
+}
 
+extension TaskInstanceCopyWithX<T> on Task<T> {
   Task<T> copyWith({
     T? initialData,
     String? label,
@@ -381,89 +474,4 @@ sealed class Task<T> {
       ),
     };
   }
-}
-
-final class TaskPending<T> extends Task<T> {
-  const TaskPending({
-    super.initialData,
-    super.label,
-    super.tags,
-  });
-
-  @override
-  TaskState get state => TaskState.pending;
-}
-
-final class TaskRunning<T> extends Task<T> {
-  const TaskRunning({
-    this.previousData,
-    super.initialData,
-    super.label,
-    super.tags,
-  });
-
-  final T? previousData;
-
-  @override
-  TaskState get state => TaskState.running;
-}
-
-final class TaskRefreshing<T> extends Task<T> {
-  const TaskRefreshing({
-    this.previousData,
-    super.initialData,
-    super.label,
-    super.tags,
-  });
-
-  final T? previousData;
-
-  @override
-  TaskState get state => TaskState.refreshing;
-}
-
-final class TaskRetrying<T> extends Task<T> {
-  const TaskRetrying({
-    this.previousData,
-    super.initialData,
-    super.label,
-    super.tags,
-  });
-
-  final T? previousData;
-
-  @override
-  TaskState get state => TaskState.retrying;
-}
-
-final class TaskSuccess<T> extends Task<T> {
-  const TaskSuccess({
-    required this.data,
-    super.initialData,
-    super.label,
-    super.tags,
-  });
-
-  final T data;
-
-  @override
-  TaskState get state => TaskState.success;
-}
-
-final class TaskFailure<T> extends Task<T> {
-  const TaskFailure({
-    required this.error,
-    this.stackTrace,
-    this.previousData,
-    super.initialData,
-    super.label,
-    super.tags,
-  });
-
-  final Object error;
-  final StackTrace? stackTrace;
-  final T? previousData;
-
-  @override
-  TaskState get state => TaskState.failure;
 }
