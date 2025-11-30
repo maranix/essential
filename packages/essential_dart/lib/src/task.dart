@@ -1,3 +1,5 @@
+import 'dart:async';
+
 /// Represents the state of a task.
 enum TaskState {
   /// Task is pending and hasn't started yet.
@@ -138,6 +140,69 @@ sealed class Task<T> {
 
   /// A set of tags associated with the task.
   final Set<String> tags;
+
+  /// Captures the result of a synchronous [callback] into a [Task].
+  ///
+  /// Returns [Task.success] if the callback completes successfully,
+  /// or [Task.failure] if it throws an error.
+  ///
+  /// Example:
+  /// ```dart
+  /// final task = Task.captureSync(() => int.parse('42'));
+  /// print(task.isSuccess); // true
+  /// print((task as TaskSuccess).data); // 42
+  /// ```
+  static Task<T> captureSync<T>(T Function() callback) {
+    try {
+      return Task.success(data: callback());
+    } catch (error, stackTrace) {
+      return Task.failure(error: error, stackTrace: stackTrace);
+    }
+  }
+
+  /// Captures the result of an asynchronous [callback] into a [Task].
+  ///
+  /// Returns a [Future] that completes with [Task.success] if the callback
+  /// completes successfully, or [Task.failure] if it throws an error.
+  ///
+  /// Example:
+  /// ```dart
+  /// final task = await Task.capture(() async {
+  ///   await Future.delayed(Duration(milliseconds: 100));
+  ///   return 'Result';
+  /// });
+  /// ```
+  static Future<Task<T>> capture<T>(FutureOr<T> Function() callback) async {
+    try {
+      return Task.success(data: await callback());
+    } catch (error, stackTrace) {
+      return Task.failure(error: error, stackTrace: stackTrace);
+    }
+  }
+
+  /// Creates a [Stream] that emits [Task] states as the [callback] executes.
+  ///
+  /// Emits [Task.running] immediately, then executes the [callback].
+  /// If the callback completes successfully, emits [Task.success].
+  /// If the callback throws an error, emits [Task.failure].
+  ///
+  /// Example:
+  /// ```dart
+  /// Task.stream(() async {
+  ///   await Future.delayed(Duration(seconds: 1));
+  ///   return 'Loaded';
+  /// }).listen((task) {
+  ///   print(task.state); // running, then success
+  /// });
+  /// ```
+  static Stream<Task<T>> stream<T>(FutureOr<T> Function() callback) async* {
+    yield Task.running();
+    try {
+      yield Task.success(data: await callback());
+    } catch (error, stackTrace) {
+      yield Task.failure(error: error, stackTrace: stackTrace);
+    }
+  }
 
   /// Optional initial data for the task.
   final T? initialData;

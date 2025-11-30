@@ -1493,6 +1493,80 @@ void main() {
         );
       });
     });
+    group('Static Methods', () {
+      group('captureSync', () {
+        test('returns TaskSuccess on successful execution', () {
+          final task = Task.captureSync(() => 42);
+          expect(task.isSuccess, isTrue);
+          expect((task as TaskSuccess<int>).data, equals(42));
+        });
+
+        test('returns TaskFailure on error', () {
+          final error = Exception('Sync error');
+          final task = Task.captureSync(() => throw error);
+          expect(task.isFailure, isTrue);
+          expect((task as TaskFailure).error, equals(error));
+        });
+      });
+
+      group('capture', () {
+        test('returns TaskSuccess on successful async execution', () async {
+          final task = await Task.capture(() async {
+            await Future<void>.delayed(const Duration(milliseconds: 10));
+            return 'Async Result';
+          });
+          expect(task.isSuccess, isTrue);
+          expect((task as TaskSuccess<String>).data, equals('Async Result'));
+        });
+
+        test('returns TaskFailure on async error', () async {
+          final error = Exception('Async error');
+          final task = await Task.capture(() async {
+            await Future<void>.delayed(const Duration(milliseconds: 10));
+            throw error;
+          });
+          expect(task.isFailure, isTrue);
+          expect((task as TaskFailure).error, equals(error));
+        });
+      });
+
+      group('stream', () {
+        test('emits running then success on successful execution', () {
+          final stream = Task.stream(() async {
+            await Future<void>.delayed(const Duration(milliseconds: 10));
+            return 100;
+          });
+
+          expect(
+            stream,
+            emitsInOrder([
+              isA<TaskRunning<int>>(),
+              isA<TaskSuccess<int>>().having((t) => t.data, 'data', 100),
+            ]),
+          );
+        });
+
+        test('emits running then failure on error', () {
+          final error = Exception('Stream error');
+          final stream = Task.stream(() async {
+            await Future<void>.delayed(const Duration(milliseconds: 10));
+            throw error;
+          });
+
+          expect(
+            stream,
+            emitsInOrder([
+              isA<TaskRunning<dynamic>>(),
+              isA<TaskFailure<dynamic>>().having(
+                (t) => t.error,
+                'error',
+                error,
+              ),
+            ]),
+          );
+        });
+      });
+    });
   });
 }
 

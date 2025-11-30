@@ -101,6 +101,36 @@ final doubled = task.mapData((data) => data * 2);
 // Transform error
 final failure = Task<int>.failure(error: Exception('Error'));
 final wrapped = failure.mapError((e) => CustomError(e));
+
+#### Capturing Execution
+
+Execute synchronous or asynchronous callbacks and automatically capture the result as a `Task`:
+
+```dart
+// Synchronous capture
+final task = Task.captureSync(() => int.parse('42'));
+
+// Asynchronous capture
+final asyncTask = await Task.capture(() async {
+  await Future.delayed(Duration(seconds: 1));
+  return 'Result';
+});
+```
+
+#### Streaming State
+
+Create a stream that emits `Task` states (running, success, failure) as the callback executes:
+
+```dart
+Task.stream(() async {
+  await Future.delayed(Duration(seconds: 1));
+  return 'Loaded';
+}).listen((task) {
+  if (task.isRunning) print('Running...');
+  if (task.isSuccess) print('Data: ${task.effectiveData}');
+  if (task.isFailure) print('Error: ${(task as TaskFailure).error}');
+});
+```
 ```
 
 ## License
