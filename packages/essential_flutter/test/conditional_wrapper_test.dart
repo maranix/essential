@@ -216,8 +216,8 @@ void main() {
               color: Colors.red,
               child: child,
             ),
-            child: const Text('Hello', key: testKey),
             initialData: true,
+            child: const Text('Hello', key: testKey),
           ),
         ),
       );
@@ -251,7 +251,6 @@ void main() {
               child: child,
             ),
             child: const Text('Hello', key: testKey),
-            initialData: false,
           ),
         ),
       );
