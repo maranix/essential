@@ -1405,6 +1405,94 @@ void main() {
         expect((retrying as TaskRetrying<int>).previousData, equals(10));
       });
     });
+
+    group('Task.from Instance Method', () {
+      test('transitions to pending', () {
+        final task = Task<int>.running(previousData: 42);
+        final pending = task.from(task, newTask: TaskState.pending);
+
+        expect(pending.isPending, isTrue);
+        expect(
+          pending.initialData,
+          equals(42),
+        ); // Uses previousData as initialData
+      });
+
+      test('transitions to running', () {
+        final task = Task<int>.pending(initialData: 10);
+        final running = task.from(task, newTask: TaskState.running);
+
+        expect(running.isRunning, isTrue);
+        expect((running as TaskRunning<int>).previousData, equals(10));
+      });
+
+      test('transitions to refreshing', () {
+        final task = Task<int>.success(data: 42);
+        final refreshing = task.from(task, newTask: TaskState.refreshing);
+
+        expect(refreshing.isRefreshing, isTrue);
+        expect((refreshing as TaskRefreshing<int>).previousData, equals(42));
+      });
+
+      test('transitions to retrying', () {
+        final task = Task<int>.failure(error: Exception(), previousData: 10);
+        final retrying = task.from(task, newTask: TaskState.retrying);
+
+        expect(retrying.isRetrying, isTrue);
+        expect((retrying as TaskRetrying<int>).previousData, equals(10));
+      });
+
+      test('transitions to success with data', () {
+        final task = Task<int>.running();
+        final success = task.from(task, newTask: TaskState.success, data: 42);
+
+        expect(success.isSuccess, isTrue);
+        expect((success as TaskSuccess<int>).data, equals(42));
+      });
+
+      test('throws StateError when transitioning to success without data', () {
+        final task = Task<int>.running();
+
+        expect(
+          () => task.from(task, newTask: TaskState.success),
+          throwsA(
+            isA<StateError>().having(
+              (e) => e.message,
+              'message',
+              contains('The "data" parameter cannot be null'),
+            ),
+          ),
+        );
+      });
+
+      test('transitions to failure with error', () {
+        final task = Task<int>.running();
+        final error = Exception('Fail');
+        final failure = task.from(
+          task,
+          newTask: TaskState.failure,
+          error: error,
+        );
+
+        expect(failure.isFailure, isTrue);
+        expect((failure as TaskFailure<int>).error, equals(error));
+      });
+
+      test('throws StateError when transitioning to failure without error', () {
+        final task = Task<int>.running();
+
+        expect(
+          () => task.from(task, newTask: TaskState.failure),
+          throwsA(
+            isA<StateError>().having(
+              (e) => e.message,
+              'message',
+              contains('The "error" parameter cannot be null'),
+            ),
+          ),
+        );
+      });
+    });
   });
 }
 

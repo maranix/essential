@@ -19,15 +19,44 @@ enum TaskState {
   failure,
 }
 
+/// A sealed class representing the state of an asynchronous operation.
+///
+/// [Task] encapsulates the lifecycle of an async task, providing a type-safe
+/// way to handle various states such as pending, running, success, and failure.
+/// It is designed to be used with pattern matching and provides convenience
+/// methods for state transitions and data transformations.
+///
+/// The generic type [T] represents the type of data the task holds upon success.
 sealed class Task<T> {
+  /// Creates a [Task] with optional metadata.
+  ///
+  /// - [label]: An optional string to identify or describe the task.
+  /// - [tags]: A set of strings for categorizing or filtering tasks.
+  /// - [initialData]: Optional initial data that can be used as a fallback.
   const Task({this.label, this.tags = const {}, this.initialData});
 
+  /// Creates a [Task] in the [TaskState.pending] state.
+  ///
+  /// This state indicates that the task has been initialized but has not yet
+  /// started execution.
+  ///
+  /// - [initialData]: Optional initial data.
+  /// - [label]: Optional task label.
+  /// - [tags]: Optional task tags.
   factory Task.pending({
     T? initialData,
     String? label,
     Set<String> tags,
   }) = TaskPending<T>;
 
+  /// Creates a [Task] in the [TaskState.running] state.
+  ///
+  /// This state indicates that the task is currently executing.
+  ///
+  /// - [initialData]: Optional initial data.
+  /// - [previousData]: Data from a previous state, if any.
+  /// - [label]: Optional task label.
+  /// - [tags]: Optional task tags.
   factory Task.running({
     T? initialData,
     T? previousData,
@@ -35,6 +64,15 @@ sealed class Task<T> {
     Set<String> tags,
   }) = TaskRunning<T>;
 
+  /// Creates a [Task] in the [TaskState.refreshing] state.
+  ///
+  /// This state indicates that the task is executing (refreshing) but has
+  /// existing data from a previous successful execution.
+  ///
+  /// - [previousData]: The existing data being refreshed.
+  /// - [initialData]: Optional initial data.
+  /// - [label]: Optional task label.
+  /// - [tags]: Optional task tags.
   factory Task.refreshing({
     T previousData,
     T? initialData,
@@ -42,6 +80,14 @@ sealed class Task<T> {
     Set<String> tags,
   }) = TaskRefreshing<T>;
 
+  /// Creates a [Task] in the [TaskState.retrying] state.
+  ///
+  /// This state indicates that the task is retrying execution after a failure.
+  ///
+  /// - [previousData]: Data from a previous state, if any.
+  /// - [initialData]: Optional initial data.
+  /// - [label]: Optional task label.
+  /// - [tags]: Optional task tags.
   factory Task.retrying({
     T previousData,
     T? initialData,
@@ -49,6 +95,15 @@ sealed class Task<T> {
     Set<String> tags,
   }) = TaskRetrying<T>;
 
+  /// Creates a [Task] in the [TaskState.success] state.
+  ///
+  /// This state indicates that the task has completed successfully and holds
+  /// the resulting [data].
+  ///
+  /// - [data]: The result of the task.
+  /// - [initialData]: Optional initial data.
+  /// - [label]: Optional task label.
+  /// - [tags]: Optional task tags.
   factory Task.success({
     required T data,
     T? initialData,
@@ -56,6 +111,16 @@ sealed class Task<T> {
     Set<String> tags,
   }) = TaskSuccess<T>;
 
+  /// Creates a [Task] in the [TaskState.failure] state.
+  ///
+  /// This state indicates that the task has failed.
+  ///
+  /// - [error]: The error that occurred.
+  /// - [stackTrace]: Optional stack trace associated with the error.
+  /// - [previousData]: Data from a previous state, if any.
+  /// - [initialData]: Optional initial data.
+  /// - [label]: Optional task label.
+  /// - [tags]: Optional task tags.
   factory Task.failure({
     required Object error,
     StackTrace? stackTrace,
@@ -65,15 +130,22 @@ sealed class Task<T> {
     Set<String> tags,
   }) = TaskFailure<T>;
 
-  /// The current state of this task.
+  /// The current state of the task.
   TaskState get state;
 
+  /// An optional label to identify the task.
   final String? label;
+
+  /// A set of tags associated with the task.
   final Set<String> tags;
+
+  /// Optional initial data for the task.
   final T? initialData;
 }
 
+/// Implementation of [Task] in the pending state.
 final class TaskPending<T> extends Task<T> {
+  /// Constructs a [TaskPending] instance.
   const TaskPending({
     super.initialData,
     super.label,
@@ -84,7 +156,9 @@ final class TaskPending<T> extends Task<T> {
   TaskState get state => TaskState.pending;
 }
 
+/// Implementation of [Task] in the running state.
 final class TaskRunning<T> extends Task<T> {
+  /// Constructs a [TaskRunning] instance.
   const TaskRunning({
     this.previousData,
     super.initialData,
@@ -92,13 +166,16 @@ final class TaskRunning<T> extends Task<T> {
     super.tags,
   });
 
+  /// Data available from a previous state.
   final T? previousData;
 
   @override
   TaskState get state => TaskState.running;
 }
 
+/// Implementation of [Task] in the refreshing state.
 final class TaskRefreshing<T> extends Task<T> {
+  /// Constructs a [TaskRefreshing] instance.
   const TaskRefreshing({
     this.previousData,
     super.initialData,
@@ -106,13 +183,16 @@ final class TaskRefreshing<T> extends Task<T> {
     super.tags,
   });
 
+  /// The data being refreshed.
   final T? previousData;
 
   @override
   TaskState get state => TaskState.refreshing;
 }
 
+/// Implementation of [Task] in the retrying state.
 final class TaskRetrying<T> extends Task<T> {
+  /// Constructs a [TaskRetrying] instance.
   const TaskRetrying({
     this.previousData,
     super.initialData,
@@ -120,13 +200,16 @@ final class TaskRetrying<T> extends Task<T> {
     super.tags,
   });
 
+  /// Data available from a previous state.
   final T? previousData;
 
   @override
   TaskState get state => TaskState.retrying;
 }
 
+/// Implementation of [Task] in the success state.
 final class TaskSuccess<T> extends Task<T> {
+  /// Constructs a [TaskSuccess] instance.
   const TaskSuccess({
     required this.data,
     super.initialData,
@@ -134,13 +217,16 @@ final class TaskSuccess<T> extends Task<T> {
     super.tags,
   });
 
+  /// The result data of the task.
   final T data;
 
   @override
   TaskState get state => TaskState.success;
 }
 
+/// Implementation of [Task] in the failure state.
 final class TaskFailure<T> extends Task<T> {
+  /// Constructs a [TaskFailure] instance.
   const TaskFailure({
     required this.error,
     this.stackTrace,
@@ -150,22 +236,44 @@ final class TaskFailure<T> extends Task<T> {
     super.tags,
   });
 
+  /// The error that caused the failure.
   final Object error;
+
+  /// The stack trace associated with the error.
   final StackTrace? stackTrace;
+
+  /// Data available from a previous state.
   final T? previousData;
 
   @override
   TaskState get state => TaskState.failure;
 }
 
+/// Extension providing convenience properties for checking the state of a [Task].
 extension TaskInstancePropertiesX<T> on Task<T> {
+  /// Returns `true` if the task is in the [TaskState.pending] state.
   bool get isPending => state == TaskState.pending;
+
+  /// Returns `true` if the task is in the [TaskState.running] state.
   bool get isRunning => state == TaskState.running;
+
+  /// Returns `true` if the task is in the [TaskState.refreshing] state.
   bool get isRefreshing => state == TaskState.refreshing;
+
+  /// Returns `true` if the task is in the [TaskState.retrying] state.
   bool get isRetrying => state == TaskState.retrying;
+
+  /// Returns `true` if the task is in the [TaskState.success] state.
   bool get isSuccess => state == TaskState.success;
+
+  /// Returns `true` if the task is in the [TaskState.failure] state.
   bool get isFailure => state == TaskState.failure;
 
+  /// Returns the effective data for the task.
+  ///
+  /// This property attempts to return the most relevant data available.
+  /// - For [TaskSuccess], it returns [TaskSuccess.data].
+  /// - For other states, it returns `previousData` if available, otherwise `initialData`.
   T? get effectiveData => switch (this) {
     TaskSuccess(data: final d) => d,
     TaskRunning(previousData: final d) => d ?? initialData,
@@ -256,6 +364,53 @@ extension TaskInstanceTransitionX<T> on Task<T> {
       tags: tags,
     );
   }
+
+  /// Transitions the task to a new state based on the provided [newTask] state.
+  ///
+  /// This method serves as a unified interface for state transitions, allowing
+  /// dynamic state changes based on enum values.
+  ///
+  /// - [newTask]: The target state to transition to.
+  /// - [data]: The data to set when transitioning to [TaskState.success].
+  ///   Also used as `initialData` when transitioning to [TaskState.pending].
+  /// - [error]: The error to set when transitioning to [TaskState.failure].
+  /// - [trace]: The stack trace to set when transitioning to [TaskState.failure].
+  ///
+  /// Throws [StateError] if:
+  /// - Transitioning to [TaskState.success] and [data] is null.
+  /// - Transitioning to [TaskState.failure] and [error] is null.
+  Task<T> from(
+    Task<T> old, {
+    required TaskState newTask,
+    T? data,
+    Object? error,
+    StackTrace? trace,
+  }) => switch (newTask) {
+    TaskState.pending => toPending(initialData: data ?? effectiveData),
+    TaskState.running => toRunning(),
+    TaskState.retrying => toRetrying(),
+    TaskState.refreshing => toRefreshing(),
+    TaskState.success => () {
+      if (data == null) {
+        throw StateError(
+          'Failed to transition to TaskState.success: The "data" parameter cannot be null.\n'
+          'When transitioning to the success state, you must provide a valid data value.\n'
+          'Fix: Ensure that the "data" argument is passed and is not null when calling from(..., newTask: TaskState.success, data: ...).',
+        );
+      }
+      return toSuccess(data);
+    }(),
+    TaskState.failure => () {
+      if (error == null) {
+        throw StateError(
+          'Failed to transition to TaskState.failure: The "error" parameter cannot be null.\n'
+          'When transitioning to the failure state, you must provide an error object.\n'
+          'Fix: Ensure that the "error" argument is passed and is not null when calling from(..., newTask: TaskState.failure, error: ...).',
+        );
+      }
+      return toFailure(error, stackTrace: trace);
+    }(),
+  };
 }
 
 extension TaskInstanceTransformX<T> on Task<T> {
