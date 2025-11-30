@@ -155,7 +155,7 @@ sealed class Task<T> {
   static Task<T> runSync<T>(T Function() callback) {
     try {
       return Task.success(data: callback());
-    } catch (error, stackTrace) {
+    } on Exception catch (error, stackTrace) {
       return Task.failure(error: error, stackTrace: stackTrace);
     }
   }
@@ -175,7 +175,7 @@ sealed class Task<T> {
   static Future<Task<T>> run<T>(FutureOr<T> Function() callback) async {
     try {
       return Task.success(data: await callback());
-    } catch (error, stackTrace) {
+    } on Exception catch (error, stackTrace) {
       return Task.failure(error: error, stackTrace: stackTrace);
     }
   }
@@ -199,7 +199,7 @@ sealed class Task<T> {
     yield Task.running();
     try {
       yield Task.success(data: await callback());
-    } catch (error, stackTrace) {
+    } on Exception catch (error, stackTrace) {
       yield Task.failure(error: error, stackTrace: stackTrace);
     }
   }
