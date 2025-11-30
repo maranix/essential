@@ -13,7 +13,7 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  essential_dart: ^1.0.0
+  essential_dart: ^1.1.0
 ```
 
 ## Usage
