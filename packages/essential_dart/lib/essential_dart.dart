@@ -58,4 +58,6 @@
 library;
 
 export 'src/memoizer.dart';
+export 'src/retry.dart';
 export 'src/task.dart';
+export 'src/types.dart';

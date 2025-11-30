@@ -133,6 +133,53 @@ Task.watch(() async {
 ```
 ```
 
+### Retry
+
+Handle temporary failures with configurable retry strategies:
+
+```dart
+import 'package:essential_dart/essential_dart.dart';
+
+// Static methods for one-off operations
+final result = await Retry.run(() => fetchData());
+
+// Exponential backoff for network requests
+await Retry.withExponentialBackoff(
+  () => api.fetchUser(userId),
+  initialDuration: Duration(milliseconds: 500),
+  multiplier: 2.0,
+  maxDelay: Duration(seconds: 5),
+  maxAttempts: 5,
+);
+
+// Linear backoff with progress logging
+await Retry.withLinearBackoff(
+  () => uploadFile(file),
+  initialDuration: Duration(seconds: 1),
+  increment: Duration(seconds: 1),
+  maxAttempts: 4,
+  onRetry: (error, attempt) {
+    print('Upload failed: $error. Retrying (attempt $attempt)...');
+    return true; // Return false to abort retry
+  },
+);
+
+// Reusable instances for multiple operations
+final networkRetry = Retry(
+  maxAttempts: 5,
+  strategy: ExponentialBackoffStrategy(
+    initialDuration: Duration(milliseconds: 500),
+    multiplier: 2.0,
+    maxDelay: Duration(seconds: 5),
+  ),
+);
+
+// Use the same retry configuration across multiple operations
+await networkRetry(() => fetchUser());
+await networkRetry(() => fetchPosts());
+await networkRetry(() => fetchComments());
+```
+
 ## License
 
 This project is licensed under the MIT License.

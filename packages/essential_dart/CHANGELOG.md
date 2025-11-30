@@ -1,3 +1,10 @@
+## 1.2.0
+- Added `Retry` utility for retrying asynchronous operations with configurable strategies.
+- Added `RetryStrategy` interface and implementations:
+  - `ConstantBackoffStrategy`
+  - `LinearBackoffStrategy`
+  - `ExponentialBackoffStrategy`
+
 ## 1.1.0
 
 - Added `Task` API for type-safe asynchronous operation state management
