@@ -11,8 +11,6 @@ This workspace contains a collection of reusable building blocks designed to imp
 
 ## Overview
 
-It is available in two variants—one for pure Dart environments and one for Flutter applications.
-
 ### essential_dart
 The Dart version offers language-level utilities such as helper classes, patterns, services, and common abstractions that streamline application logic. This includes features like sealed classes for representing UI or operation states (e.g., loading, loaded, failure) and other reusable code snippets aimed at reducing boilerplate and promoting consistency.
 
