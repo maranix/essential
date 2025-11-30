@@ -1494,24 +1494,24 @@ void main() {
       });
     });
     group('Static Methods', () {
-      group('captureSync', () {
+      group('runSync', () {
         test('returns TaskSuccess on successful execution', () {
-          final task = Task.captureSync(() => 42);
+          final task = Task.runSync(() => 42);
           expect(task.isSuccess, isTrue);
           expect((task as TaskSuccess<int>).data, equals(42));
         });
 
         test('returns TaskFailure on error', () {
           final error = Exception('Sync error');
-          final task = Task.captureSync(() => throw error);
+          final task = Task.runSync(() => throw error);
           expect(task.isFailure, isTrue);
           expect((task as TaskFailure).error, equals(error));
         });
       });
 
-      group('capture', () {
+      group('run', () {
         test('returns TaskSuccess on successful async execution', () async {
-          final task = await Task.capture(() async {
+          final task = await Task.run(() async {
             await Future<void>.delayed(const Duration(milliseconds: 10));
             return 'Async Result';
           });
@@ -1521,7 +1521,7 @@ void main() {
 
         test('returns TaskFailure on async error', () async {
           final error = Exception('Async error');
-          final task = await Task.capture(() async {
+          final task = await Task.run(() async {
             await Future<void>.delayed(const Duration(milliseconds: 10));
             throw error;
           });
@@ -1530,9 +1530,9 @@ void main() {
         });
       });
 
-      group('stream', () {
+      group('watch', () {
         test('emits running then success on successful execution', () {
-          final stream = Task.stream(() async {
+          final stream = Task.watch(() async {
             await Future<void>.delayed(const Duration(milliseconds: 10));
             return 100;
           });
@@ -1548,7 +1548,7 @@ void main() {
 
         test('emits running then failure on error', () {
           final error = Exception('Stream error');
-          final stream = Task.stream(() async {
+          final stream = Task.watch(() async {
             await Future<void>.delayed(const Duration(milliseconds: 10));
             throw error;
           });

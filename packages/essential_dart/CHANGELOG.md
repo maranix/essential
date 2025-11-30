@@ -1,3 +1,8 @@
+## 1.2.0
+
+- Added `run` and `runSync` methods to `Task` for executing callbacks and returning `Task` objects.
+- Added `watch` method to `Task` for creating streams that emit `Task` states.
+
 ## 1.1.0
 
 - Added `Task` API for type-safe asynchronous operation state management
@@ -13,8 +18,6 @@
 - All transition methods automatically propagate label, tags, and initialData
 - Updated state checking getters to use `TaskState` enum
 - Comprehensive test suite with 132 tests covering all functionality
-- Added `capture` and `captureSync` methods to `Task` for executing callbacks and returning `Task` objects.
-- Added `stream` method to `Task` for creating streams that emit `Task` states.
 
 ## 1.0.0+1
 

@@ -141,18 +141,18 @@ sealed class Task<T> {
   /// A set of tags associated with the task.
   final Set<String> tags;
 
-  /// Captures the result of a synchronous [callback] into a [Task].
+  /// Runs a synchronous [callback] and wraps the result in a [Task].
   ///
   /// Returns [Task.success] if the callback completes successfully,
   /// or [Task.failure] if it throws an error.
   ///
   /// Example:
   /// ```dart
-  /// final task = Task.captureSync(() => int.parse('42'));
+  /// final task = Task.runSync(() => int.parse('42'));
   /// print(task.isSuccess); // true
   /// print((task as TaskSuccess).data); // 42
   /// ```
-  static Task<T> captureSync<T>(T Function() callback) {
+  static Task<T> runSync<T>(T Function() callback) {
     try {
       return Task.success(data: callback());
     } catch (error, stackTrace) {
@@ -160,19 +160,19 @@ sealed class Task<T> {
     }
   }
 
-  /// Captures the result of an asynchronous [callback] into a [Task].
+  /// Runs an asynchronous [callback] and wraps the result in a [Task].
   ///
   /// Returns a [Future] that completes with [Task.success] if the callback
   /// completes successfully, or [Task.failure] if it throws an error.
   ///
   /// Example:
   /// ```dart
-  /// final task = await Task.capture(() async {
+  /// final task = await Task.run(() async {
   ///   await Future.delayed(Duration(milliseconds: 100));
   ///   return 'Result';
   /// });
   /// ```
-  static Future<Task<T>> capture<T>(FutureOr<T> Function() callback) async {
+  static Future<Task<T>> run<T>(FutureOr<T> Function() callback) async {
     try {
       return Task.success(data: await callback());
     } catch (error, stackTrace) {
@@ -180,7 +180,7 @@ sealed class Task<T> {
     }
   }
 
-  /// Creates a [Stream] that emits [Task] states as the [callback] executes.
+  /// Watches the execution of a [callback], emitting [Task] states as it runs.
   ///
   /// Emits [Task.running] immediately, then executes the [callback].
   /// If the callback completes successfully, emits [Task.success].
@@ -188,14 +188,14 @@ sealed class Task<T> {
   ///
   /// Example:
   /// ```dart
-  /// Task.stream(() async {
+  /// Task.watch(() async {
   ///   await Future.delayed(Duration(seconds: 1));
   ///   return 'Loaded';
   /// }).listen((task) {
   ///   print(task.state); // running, then success
   /// });
   /// ```
-  static Stream<Task<T>> stream<T>(FutureOr<T> Function() callback) async* {
+  static Stream<Task<T>> watch<T>(FutureOr<T> Function() callback) async* {
     yield Task.running();
     try {
       yield Task.success(data: await callback());

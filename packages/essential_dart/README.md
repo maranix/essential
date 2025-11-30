@@ -107,22 +107,22 @@ final wrapped = failure.mapError((e) => CustomError(e));
 Execute synchronous or asynchronous callbacks and automatically capture the result as a `Task`:
 
 ```dart
-// Synchronous capture
-final task = Task.captureSync(() => int.parse('42'));
+// Synchronous execution
+final task = Task.runSync(() => int.parse('42'));
 
-// Asynchronous capture
-final asyncTask = await Task.capture(() async {
+// Asynchronous execution
+final asyncTask = await Task.run(() async {
   await Future.delayed(Duration(seconds: 1));
   return 'Result';
 });
 ```
 
-#### Streaming State
+#### Watching Execution
 
 Create a stream that emits `Task` states (running, success, failure) as the callback executes:
 
 ```dart
-Task.stream(() async {
+Task.watch(() async {
   await Future.delayed(Duration(seconds: 1));
   return 'Loaded';
 }).listen((task) {
