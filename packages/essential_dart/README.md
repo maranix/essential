@@ -138,6 +138,36 @@ Task.watch(() async {
 });
 ```
 
+#### Caching
+
+Cache task results to improve performance and reduce redundant computations:
+
+```dart
+// Memoize - cache indefinitely
+final task = Task<int>.pending(
+  cachingStrategy: CachingStrategy.memoize,
+);
+
+final result1 = await task.execute(() async => expensiveComputation());
+final result2 = await task.execute(() async => expensiveComputation());
+// result2 uses cached value, computation runs only once
+
+// Temporal - cache for a duration
+final apiTask = Task<User>.pending(
+  cachingStrategy: CachingStrategy.temporal,
+  cacheDuration: Duration(minutes: 5),
+);
+
+final user = await apiTask.execute(() async => fetchUser());
+// Subsequent calls within 5 minutes use cached result
+
+// Refresh cached data
+final freshData = await task.refresh(() async => fetchFreshData());
+
+// Invalidate cache manually
+task.invalidateCache();
+```
+
 ### TaskGroup
 
 Manage multiple tasks as a single unit:

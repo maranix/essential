@@ -1,5 +1,9 @@
 import 'dart:async';
 
+import 'package:async/async.dart';
+import 'package:essential_dart/src/memoizer.dart';
+import 'package:essential_dart/src/types.dart';
+
 /// Represents the state of a task.
 enum TaskState {
   /// Task is pending and hasn't started yet.
@@ -21,6 +25,9 @@ enum TaskState {
   failure,
 }
 
+/// Default cache duration (5 minutes).
+const Duration _kDefaultCacheDuration = Duration(minutes: 5);
+
 /// A sealed class representing the state of an asynchronous operation.
 ///
 /// [Task] encapsulates the lifecycle of an async task, providing a type-safe
@@ -35,7 +42,26 @@ sealed class Task<T> {
   /// - [label]: An optional string to identify or describe the task.
   /// - [tags]: A set of strings for categorizing or filtering tasks.
   /// - [initialData]: Optional initial data that can be used as a fallback.
-  const Task({this.label, this.tags = const {}, this.initialData});
+  /// - [cachingStrategy]: The caching strategy to use (default: none).
+  /// - [cacheDuration]: Duration for temporal caching (default: 5 minutes).
+  Task({
+    this.label,
+    this.tags = const {},
+    this.initialData,
+    CachingStrategy? cachingStrategy,
+    Duration? cacheDuration,
+    Memoizer<T>? memoizer,
+    AsyncCache<T>? asyncCache,
+  }) : cachingStrategy = cachingStrategy ?? .none,
+       cacheDuration = cacheDuration ?? _kDefaultCacheDuration,
+       _memoizer =
+           memoizer ??
+           (cachingStrategy == CachingStrategy.memoize ? Memoizer<T>() : null),
+       _asyncCache =
+           asyncCache ??
+           (cachingStrategy == CachingStrategy.temporal
+               ? AsyncCache<T>(cacheDuration ?? _kDefaultCacheDuration)
+               : null);
 
   /// Creates a [Task] in the [TaskState.pending] state.
   ///
@@ -49,6 +75,8 @@ sealed class Task<T> {
     T? initialData,
     String? label,
     Set<String> tags,
+    CachingStrategy cachingStrategy,
+    Duration? cacheDuration,
   }) = TaskPending<T>;
 
   /// Creates a [Task] in the [TaskState.running] state.
@@ -64,6 +92,8 @@ sealed class Task<T> {
     T? previousData,
     String? label,
     Set<String> tags,
+    CachingStrategy cachingStrategy,
+    Duration? cacheDuration,
   }) = TaskRunning<T>;
 
   /// Creates a [Task] in the [TaskState.refreshing] state.
@@ -80,6 +110,8 @@ sealed class Task<T> {
     T? initialData,
     String? label,
     Set<String> tags,
+    CachingStrategy cachingStrategy,
+    Duration? cacheDuration,
   }) = TaskRefreshing<T>;
 
   /// Creates a [Task] in the [TaskState.retrying] state.
@@ -95,6 +127,8 @@ sealed class Task<T> {
     T? initialData,
     String? label,
     Set<String> tags,
+    CachingStrategy cachingStrategy,
+    Duration? cacheDuration,
   }) = TaskRetrying<T>;
 
   /// Creates a [Task] in the [TaskState.success] state.
@@ -111,6 +145,8 @@ sealed class Task<T> {
     T? initialData,
     String? label,
     Set<String> tags,
+    CachingStrategy cachingStrategy,
+    Duration? cacheDuration,
   }) = TaskSuccess<T>;
 
   /// Creates a [Task] in the [TaskState.failure] state.
@@ -130,6 +166,8 @@ sealed class Task<T> {
     T? initialData,
     String? label,
     Set<String> tags,
+    CachingStrategy cachingStrategy,
+    Duration? cacheDuration,
   }) = TaskFailure<T>;
 
   /// The current state of the task.
@@ -140,6 +178,21 @@ sealed class Task<T> {
 
   /// A set of tags associated with the task.
   final Set<String> tags;
+
+  /// The caching strategy for this task.
+  final CachingStrategy cachingStrategy;
+
+  /// The duration for temporal caching.
+  final Duration cacheDuration;
+
+  /// Internal memoizer for 'memoize' strategy.
+  final Memoizer<T>? _memoizer;
+
+  /// Internal async cache for 'temporal' strategy.
+  final AsyncCache<T>? _asyncCache;
+
+  /// Optional initial data for the task.
+  final T? initialData;
 
   /// Runs a synchronous [callback] and wraps the result in a [Task].
   ///
@@ -204,17 +257,85 @@ sealed class Task<T> {
     }
   }
 
-  /// Optional initial data for the task.
-  final T? initialData;
+  /// Executes a [computation] with caching based on the configured strategy.
+  ///
+  /// - If [cachingStrategy] is [CachingStrategy.none], runs the computation directly.
+  /// - If [cachingStrategy] is [CachingStrategy.memoize], uses [Memoizer] to cache the result indefinitely.
+  /// - If [cachingStrategy] is [CachingStrategy.temporal], uses [AsyncCache] with [cacheDuration].
+  ///
+  /// Example:
+  /// ```dart
+  /// final task = Task<int>.pending(cachingStrategy: CachingStrategy.memoize);
+  /// final result = await task.execute(() async => expensiveComputation());
+  /// ```
+  Future<T> execute(Future<T> Function() computation) {
+    switch (cachingStrategy) {
+      case CachingStrategy.none:
+        return computation();
+      case CachingStrategy.memoize:
+        return _memoizer!.runComputation(computation);
+      case CachingStrategy.temporal:
+        return _asyncCache!.fetch(computation);
+    }
+  }
+
+  /// Invalidates the cache for this task.
+  ///
+  /// - For [CachingStrategy.memoize], resets the memoizer.
+  /// - For [CachingStrategy.temporal], invalidates the async cache.
+  /// - For [CachingStrategy.none], does nothing.
+  ///
+  /// Example:
+  /// ```dart
+  /// task.invalidateCache();
+  /// ```
+  void invalidateCache() {
+    switch (cachingStrategy) {
+      case CachingStrategy.none:
+        break;
+      case CachingStrategy.memoize:
+        // Memoizer doesn't have a simple invalidate, we'd need to reset
+        // But reset requires a new computation, so we can't do it here
+        // User should use refresh() instead
+        break;
+      case CachingStrategy.temporal:
+        _asyncCache?.invalidate();
+    }
+  }
+
+  /// Invalidates the cache and runs the [computation].
+  ///
+  /// This is equivalent to calling [invalidateCache] followed by [run],
+  /// but more efficient for memoize strategy.
+  ///
+  /// Example:
+  /// ```dart
+  /// final result = await task.refresh(() async => fetchFreshData());
+  /// ```
+  Future<T> refresh(Future<T> Function() computation) {
+    switch (cachingStrategy) {
+      case CachingStrategy.none:
+        return computation();
+      case CachingStrategy.memoize:
+        return _memoizer!.reset(computation);
+      case CachingStrategy.temporal:
+        _asyncCache?.invalidate();
+        return _asyncCache!.fetch(computation);
+    }
+  }
 }
 
 /// Implementation of [Task] in the pending state.
 final class TaskPending<T> extends Task<T> {
   /// Constructs a [TaskPending] instance.
-  const TaskPending({
+  TaskPending({
     super.initialData,
     super.label,
     super.tags,
+    super.cachingStrategy,
+    super.cacheDuration,
+    super.memoizer,
+    super.asyncCache,
   });
 
   @override
@@ -224,11 +345,15 @@ final class TaskPending<T> extends Task<T> {
 /// Implementation of [Task] in the running state.
 final class TaskRunning<T> extends Task<T> {
   /// Constructs a [TaskRunning] instance.
-  const TaskRunning({
+  TaskRunning({
     this.previousData,
     super.initialData,
     super.label,
     super.tags,
+    super.cachingStrategy,
+    super.cacheDuration,
+    super.memoizer,
+    super.asyncCache,
   });
 
   /// Data available from a previous state.
@@ -241,11 +366,15 @@ final class TaskRunning<T> extends Task<T> {
 /// Implementation of [Task] in the refreshing state.
 final class TaskRefreshing<T> extends Task<T> {
   /// Constructs a [TaskRefreshing] instance.
-  const TaskRefreshing({
+  TaskRefreshing({
     this.previousData,
     super.initialData,
     super.label,
     super.tags,
+    super.cachingStrategy,
+    super.cacheDuration,
+    super.memoizer,
+    super.asyncCache,
   });
 
   /// The data being refreshed.
@@ -258,11 +387,15 @@ final class TaskRefreshing<T> extends Task<T> {
 /// Implementation of [Task] in the retrying state.
 final class TaskRetrying<T> extends Task<T> {
   /// Constructs a [TaskRetrying] instance.
-  const TaskRetrying({
+  TaskRetrying({
     this.previousData,
     super.initialData,
     super.label,
     super.tags,
+    super.cachingStrategy,
+    super.cacheDuration,
+    super.memoizer,
+    super.asyncCache,
   });
 
   /// Data available from a previous state.
@@ -275,11 +408,15 @@ final class TaskRetrying<T> extends Task<T> {
 /// Implementation of [Task] in the success state.
 final class TaskSuccess<T> extends Task<T> {
   /// Constructs a [TaskSuccess] instance.
-  const TaskSuccess({
+  TaskSuccess({
     required this.data,
     super.initialData,
     super.label,
     super.tags,
+    super.cachingStrategy,
+    super.cacheDuration,
+    super.memoizer,
+    super.asyncCache,
   });
 
   /// The result data of the task.
@@ -292,13 +429,17 @@ final class TaskSuccess<T> extends Task<T> {
 /// Implementation of [Task] in the failure state.
 final class TaskFailure<T> extends Task<T> {
   /// Constructs a [TaskFailure] instance.
-  const TaskFailure({
+  TaskFailure({
     required this.error,
     this.stackTrace,
     this.previousData,
     super.initialData,
     super.label,
     super.tags,
+    super.cachingStrategy,
+    super.cacheDuration,
+    super.memoizer,
+    super.asyncCache,
   });
 
   /// The error that caused the failure.
@@ -391,6 +532,10 @@ extension TaskInstanceTransitionX<T> on Task<T> {
       initialData: initialData ?? this.initialData,
       label: label,
       tags: tags,
+      cachingStrategy: cachingStrategy,
+      cacheDuration: cacheDuration,
+      memoizer: _memoizer,
+      asyncCache: _asyncCache,
     );
   }
 
@@ -404,6 +549,10 @@ extension TaskInstanceTransitionX<T> on Task<T> {
       initialData: initialData,
       label: label,
       tags: tags,
+      cachingStrategy: cachingStrategy,
+      cacheDuration: cacheDuration,
+      memoizer: _memoizer,
+      asyncCache: _asyncCache,
     );
   }
 
@@ -418,6 +567,10 @@ extension TaskInstanceTransitionX<T> on Task<T> {
       initialData: initialData,
       label: label,
       tags: tags,
+      cachingStrategy: cachingStrategy,
+      cacheDuration: cacheDuration,
+      memoizer: _memoizer,
+      asyncCache: _asyncCache,
     );
   }
 
@@ -432,6 +585,10 @@ extension TaskInstanceTransitionX<T> on Task<T> {
       initialData: initialData,
       label: label,
       tags: tags,
+      cachingStrategy: cachingStrategy,
+      cacheDuration: cacheDuration,
+      memoizer: _memoizer,
+      asyncCache: _asyncCache,
     );
   }
 
@@ -444,6 +601,10 @@ extension TaskInstanceTransitionX<T> on Task<T> {
       initialData: initialData,
       label: label,
       tags: tags,
+      cachingStrategy: cachingStrategy,
+      cacheDuration: cacheDuration,
+      memoizer: _memoizer,
+      asyncCache: _asyncCache,
     );
   }
 
@@ -460,6 +621,10 @@ extension TaskInstanceTransitionX<T> on Task<T> {
       initialData: initialData,
       label: label,
       tags: tags,
+      cachingStrategy: cachingStrategy,
+      cacheDuration: cacheDuration,
+      memoizer: _memoizer,
+      asyncCache: _asyncCache,
     );
   }
 

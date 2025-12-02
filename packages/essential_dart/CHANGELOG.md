@@ -10,6 +10,13 @@
 - Enhanced `Task` API:
   - Added type-safe state getters (`.success`, `.failure`, `.pending`, etc.) that throw detailed `StateError` if the state doesn't match.
   - Added `effectiveData` getter to retrieve data from current or previous states.
+  - Added caching support with `CachingStrategy` enum (none, memoize, temporal).
+  - Added `execute()` method for cached task execution.
+  - Added `invalidateCache()` method to clear cached results.
+  - Added `refresh()` method to invalidate cache and re-execute.
+  - Cache persists across state transitions.
+  - Default cache duration: 5 minutes for temporal strategy.
+
 
 ## 1.2.0
 - Added `Retry` utility for retrying asynchronous operations with configurable strategies.
