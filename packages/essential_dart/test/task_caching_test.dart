@@ -1,4 +1,5 @@
 import 'package:essential_dart/essential_dart.dart';
+import 'package:essential_dart/src/enums.dart';
 import 'package:test/test.dart';
 
 void main() {

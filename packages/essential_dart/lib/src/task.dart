@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:async/async.dart';
+import 'package:essential_dart/src/enums.dart';
 import 'package:essential_dart/src/memoizer.dart';
-import 'package:essential_dart/src/types.dart';
 
 /// Represents the state of a task.
 enum TaskState {
