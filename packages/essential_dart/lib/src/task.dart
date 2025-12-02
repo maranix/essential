@@ -347,6 +347,39 @@ extension TaskInstancePropertiesX<T> on Task<T> {
     TaskFailure(previousData: final d) => d ?? initialData,
     TaskPending() => initialData,
   };
+
+  /// Returns this task as [TaskPending] or throws [StateError].
+  TaskPending<T> get pending => _checkState<TaskPending<T>>(TaskState.pending);
+
+  /// Returns this task as [TaskRunning] or throws [StateError].
+  TaskRunning<T> get running => _checkState<TaskRunning<T>>(TaskState.running);
+
+  /// Returns this task as [TaskRefreshing] or throws [StateError].
+  TaskRefreshing<T> get refreshing =>
+      _checkState<TaskRefreshing<T>>(TaskState.refreshing);
+
+  /// Returns this task as [TaskRetrying] or throws [StateError].
+  TaskRetrying<T> get retrying =>
+      _checkState<TaskRetrying<T>>(TaskState.retrying);
+
+  /// Returns this task as [TaskSuccess] or throws [StateError].
+  TaskSuccess<T> get success => _checkState<TaskSuccess<T>>(TaskState.success);
+
+  /// Returns this task as [TaskFailure] or throws [StateError].
+  TaskFailure<T> get failure => _checkState<TaskFailure<T>>(TaskState.failure);
+
+  S _checkState<S extends Task<T>>(TaskState expectedState) {
+    if (this is S) {
+      return this as S;
+    }
+
+    throw StateError(
+      'Task is not in the expected state.\n'
+      'Expected: $expectedState\n'
+      'Actual: $state\n'
+      'Fix: Check the state using is${expectedState.name[0].toUpperCase()}${expectedState.name.substring(1)} before accessing the getter.',
+    );
+  }
 }
 
 extension TaskInstanceTransitionX<T> on Task<T> {

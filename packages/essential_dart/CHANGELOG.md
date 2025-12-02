@@ -1,3 +1,16 @@
+## 1.3.0
+
+- Added `TaskGroup` API for managing collections of tasks with aggregate state.
+  - Support for homogeneous (`TaskGroup.uniform`) and heterogeneous (`TaskGroup.mixed`) groups.
+  - Aggregate state derivation (Active, Completed, Failed, Idle, Partial).
+  - Batch operations (`runAll`, `mapTasks`, `retryFailed`) for homogeneous groups.
+  - Query extensions (`withLabel`, `withTags`, `byState`, `where`).
+  - State transition extensions (`toRunning`, `toPending`, `resetFailed`).
+  - Stream support via `watch`.
+- Enhanced `Task` API:
+  - Added type-safe state getters (`.success`, `.failure`, `.pending`, etc.) that throw detailed `StateError` if the state doesn't match.
+  - Added `effectiveData` getter to retrieve data from current or previous states.
+
 ## 1.2.0
 - Added `Retry` utility for retrying asynchronous operations with configurable strategies.
 - Added `RetryStrategy` interface and implementations:

@@ -6,6 +6,7 @@ Reusable building blocks, patterns, and services for Dart to improve efficiency 
 
 - **Memoizer**: Cache results of expensive computations with lazy/eager execution and reset functionality.
 - **Task**: Type-safe state management for asynchronous operations with intuitive state transitions.
+- **TaskGroup**: Manage collections of tasks with aggregate state tracking and batch operations.
 
 ## Getting started
 
@@ -13,7 +14,7 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  essential_dart: ^1.1.0
+  essential_dart: ^1.3.0
 ```
 
 ## Usage
@@ -80,6 +81,11 @@ if (task.state == TaskState.success) {
 if (task.isSuccess) {
   print('Success!');
 }
+
+// Access data type-safely (throws if state doesn't match)
+if (task.isSuccess) {
+  print(task.success.data); 
+}
 ```
 
 #### Chaining Transitions
@@ -131,6 +137,38 @@ Task.watch(() async {
   if (task.isFailure) print('Error: ${(task as TaskFailure).error}');
 });
 ```
+
+### TaskGroup
+
+Manage multiple tasks as a single unit:
+
+```dart
+// Create a group of tasks
+var group = TaskGroup<int>.uniform({
+  'users': Task.pending(),
+  'posts': Task.pending(),
+});
+
+// Run all tasks
+group = await group.runAll((key, task) async {
+  return await fetchCount(key);
+});
+
+// Check aggregate state
+if (group.isCompleted) {
+  print('All done!');
+} else if (group.isPartial) {
+  print('Some failed or pending');
+}
+
+// Access individual tasks type-safely
+final userCount = group.getTask<TaskSuccess<int>>('users');
+if (userCount != null) {
+  print('Users: ${userCount.data}');
+}
+
+// Retry only failed tasks
+group = await group.retryFailed((key, task) => fetchCount(key));
 ```
 
 ### Retry
