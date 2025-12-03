@@ -1,3 +1,36 @@
+## 2.0.0
+
+### Breaking Changes
+
+- **Task and TaskGroup now require generic type parameters for Label and Tags**
+  - `Task<T>` → `Task<T, Label, Tags>`
+  - `TaskGroup<T>` → `TaskGroup<T, Label, Tags>`
+  - All subclasses, extensions, and methods updated to use generic parameters
+  - `label` field type changed from `String?` to `Label?`
+  - `tags` field type changed from `Set<String>` to `Tags?`
+  
+  **Migration:**
+  ```dart
+  // Before
+  final task = Task<int>.pending(label: 'fetch', tags: {'api'});
+  final group = TaskGroup<User>.uniform({...});
+  
+  // After - Option 1: Use type aliases
+  final task = SimpleTask<int>.pending(label: 'fetch', tags: {'api'});
+  final group = SimpleTaskGroup<User>.uniform({...});
+  
+  // After - Option 2: Explicit types
+  final task = Task<int, String?, Set<String>>.pending(label: 'fetch', tags: {'api'});
+  final group = TaskGroup<User, String?, Set<String>>.uniform({...});
+  ```
+
+### New Features
+
+- Added `SimpleTask<T>` type alias for `Task<T, String?, Set<String>>`
+- Added `SimpleTaskGroup<T>` type alias for `TaskGroup<T, String?, Set<String>>`
+- Support for custom Label and Tags types (enums, custom classes, etc.)
+- Full type safety for labels and tags throughout the API
+
 ## 1.3.0
 
 - Added `TaskGroup` API for managing collections of tasks with aggregate state.

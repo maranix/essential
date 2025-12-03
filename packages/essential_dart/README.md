@@ -41,8 +41,14 @@ Manage asynchronous operation states with clean, type-safe transitions:
 ```dart
 import 'package:essential_dart/essential_dart.dart';
 
-// Create a task in pending state
-var task = Task<String>.pending(label: 'fetch-users');
+// Using the SimpleTask type alias (recommended for most cases)
+var task = SimpleTask<String>.pending(label: 'fetch-users');
+
+// Or use explicit types for custom Label/Tags
+var customTask = Task<String, String?, Set<String>>.pending(
+  label: 'fetch-users',
+  tags: {'api', 'critical'},
+);
 
 // Transition to running
 task = task.toRunning();
@@ -60,6 +66,20 @@ task = task.toRetrying();
 task = task.toRefreshing();
 ```
 
+#### Custom Label and Tags Types
+
+You can use custom types for labels and tags for better type safety:
+
+```dart
+enum TaskLabel { fetching, processing, completed }
+enum TaskTag { critical, background, userInitiated }
+
+var task = Task<int, TaskLabel, Set<TaskTag>>.pending(
+  label: TaskLabel.fetching,
+  tags: {TaskTag.critical, TaskTag.userInitiated},
+);
+```
+
 #### Task States
 
 Tasks can be in one of six states:
@@ -74,7 +94,7 @@ Tasks can be in one of six states:
 
 ```dart
 if (task.state == TaskState.success) {
-  print('Data: ${(task as TaskSuccess<String>).data}');
+  print('Data: ${task.success.data}');
 }
 
 // Or use convenience getters
@@ -91,7 +111,7 @@ if (task.isSuccess) {
 #### Chaining Transitions
 
 ```dart
-final result = Task<int>.pending()
+final result = SimpleTask<int>.pending()
     .toRunning()
     .toSuccess(42)
     .toRefreshing();

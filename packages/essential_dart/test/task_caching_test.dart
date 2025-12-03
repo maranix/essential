@@ -7,7 +7,7 @@ void main() {
     group('CachingStrategy.none', () {
       test('should execute computation every time', () async {
         var executionCount = 0;
-        final task = Task<int>.pending(
+        final task = Task<int, String?, Set<String>>.pending(
           cachingStrategy: CachingStrategy.none,
         );
 
@@ -28,7 +28,7 @@ void main() {
 
       test('should not cache across state transitions', () async {
         var executionCount = 0;
-        var task = Task<int>.pending(
+        var task = Task<int, String?, Set<String>>.pending(
           cachingStrategy: CachingStrategy.none,
         );
 
@@ -47,7 +47,7 @@ void main() {
       });
 
       test('invalidateCache should do nothing', () {
-        final task = Task<int>.pending(
+        final task = Task<int, String?, Set<String>>.pending(
           cachingStrategy: CachingStrategy.none,
         );
 
@@ -56,7 +56,7 @@ void main() {
 
       test('refresh should execute computation', () async {
         var executionCount = 0;
-        final task = Task<int>.pending(
+        final task = Task<int, String?, Set<String>>.pending(
           cachingStrategy: CachingStrategy.none,
         );
 
@@ -73,7 +73,7 @@ void main() {
     group('CachingStrategy.memoize', () {
       test('should cache result indefinitely', () async {
         var executionCount = 0;
-        final task = Task<int>.pending(
+        final task = Task<int, String?, Set<String>>.pending(
           cachingStrategy: CachingStrategy.memoize,
         );
 
@@ -100,7 +100,7 @@ void main() {
 
       test('should preserve cache across state transitions', () async {
         var executionCount = 0;
-        var task = Task<int>.pending(
+        var task = Task<int, String?, Set<String>>.pending(
           cachingStrategy: CachingStrategy.memoize,
         );
 
@@ -129,7 +129,7 @@ void main() {
 
       test('refresh should invalidate and re-execute', () async {
         var executionCount = 0;
-        final task = Task<int>.pending(
+        final task = Task<int, String?, Set<String>>.pending(
           cachingStrategy: CachingStrategy.memoize,
         );
 
@@ -155,7 +155,7 @@ void main() {
       });
 
       test('should handle errors in cached computation', () {
-        final task = Task<int>.pending(
+        final task = Task<int, String?, Set<String>>.pending(
           cachingStrategy: CachingStrategy.memoize,
         );
 
@@ -172,7 +172,7 @@ void main() {
       });
 
       test('should work with different data types', () async {
-        final stringTask = Task<String>.pending(
+        final stringTask = Task<String, String?, Set<String>>.pending(
           cachingStrategy: CachingStrategy.memoize,
         );
 
@@ -184,7 +184,7 @@ void main() {
       });
 
       test('should handle null values', () async {
-        final task = Task<int?>.pending(
+        final task = Task<int?, String?, Set<String>>.pending(
           cachingStrategy: CachingStrategy.memoize,
         );
 
@@ -199,7 +199,7 @@ void main() {
     group('CachingStrategy.temporal', () {
       test('should cache for specified duration', () async {
         var executionCount = 0;
-        final task = Task<int>.pending(
+        final task = Task<int, String?, Set<String>>.pending(
           cachingStrategy: CachingStrategy.temporal,
           cacheDuration: const Duration(milliseconds: 100),
         );
@@ -233,7 +233,7 @@ void main() {
 
       test('should use default cache duration when not specified', () async {
         var executionCount = 0;
-        final task = Task<int>.pending(
+        final task = Task<int, String?, Set<String>>.pending(
           cachingStrategy: CachingStrategy.temporal,
         );
 
@@ -249,7 +249,7 @@ void main() {
 
       test('invalidateCache should clear cache', () async {
         var executionCount = 0;
-        final task = Task<int>.pending(
+        final task = Task<int, String?, Set<String>>.pending(
           cachingStrategy: CachingStrategy.temporal,
           cacheDuration: const Duration(hours: 1),
         );
@@ -272,7 +272,7 @@ void main() {
 
       test('refresh should invalidate and re-execute', () async {
         var executionCount = 0;
-        final task = Task<int>.pending(
+        final task = Task<int, String?, Set<String>>.pending(
           cachingStrategy: CachingStrategy.temporal,
           cacheDuration: const Duration(hours: 1),
         );
@@ -294,7 +294,7 @@ void main() {
 
       test('should preserve cache across state transitions', () async {
         var executionCount = 0;
-        var task = Task<int>.pending(
+        var task = Task<int, String?, Set<String>>.pending(
           cachingStrategy: CachingStrategy.temporal,
           cacheDuration: const Duration(seconds: 10),
         );
@@ -316,7 +316,7 @@ void main() {
 
       test('should handle very short cache durations', () async {
         var executionCount = 0;
-        final task = Task<int>.pending(
+        final task = Task<int, String?, Set<String>>.pending(
           cachingStrategy: CachingStrategy.temporal,
           cacheDuration: const Duration(milliseconds: 1),
         );
@@ -340,7 +340,7 @@ void main() {
     group('State Transitions with Caching', () {
       test('toPending preserves cache', () async {
         var executionCount = 0;
-        var task = Task<int>.running(
+        var task = Task<int, String?, Set<String>>.running(
           cachingStrategy: CachingStrategy.memoize,
         );
 
@@ -361,7 +361,7 @@ void main() {
 
       test('toRunning preserves cache', () async {
         var executionCount = 0;
-        var task = Task<int>.pending(
+        var task = Task<int, String?, Set<String>>.pending(
           cachingStrategy: CachingStrategy.memoize,
         );
 
@@ -382,7 +382,7 @@ void main() {
 
       test('toSuccess preserves cache', () async {
         var executionCount = 0;
-        var task = Task<int>.pending(
+        var task = Task<int, String?, Set<String>>.pending(
           cachingStrategy: CachingStrategy.memoize,
         );
 
@@ -403,7 +403,7 @@ void main() {
 
       test('toFailure preserves cache', () async {
         var executionCount = 0;
-        var task = Task<int>.pending(
+        var task = Task<int, String?, Set<String>>.pending(
           cachingStrategy: CachingStrategy.memoize,
         );
 
@@ -424,7 +424,7 @@ void main() {
 
       test('toRefreshing preserves cache', () async {
         var executionCount = 0;
-        var task = Task<int>.success(
+        var task = Task<int, String?, Set<String>>.success(
           data: 100,
           cachingStrategy: CachingStrategy.memoize,
         );
@@ -446,7 +446,7 @@ void main() {
 
       test('toRetrying preserves cache', () async {
         var executionCount = 0;
-        var task = Task<int>.failure(
+        var task = Task<int, String?, Set<String>>.failure(
           error: 'Error',
           cachingStrategy: CachingStrategy.memoize,
         );
@@ -470,7 +470,7 @@ void main() {
     group('Edge Cases', () {
       test('should handle concurrent executions with memoize', () async {
         var executionCount = 0;
-        final task = Task<int>.pending(
+        final task = Task<int, String?, Set<String>>.pending(
           cachingStrategy: CachingStrategy.memoize,
         );
 
@@ -494,7 +494,7 @@ void main() {
 
       test('should handle concurrent executions with temporal', () async {
         var executionCount = 0;
-        final task = Task<int>.pending(
+        final task = Task<int, String?, Set<String>>.pending(
           cachingStrategy: CachingStrategy.temporal,
           cacheDuration: const Duration(seconds: 1),
         );
@@ -515,7 +515,7 @@ void main() {
       });
 
       test('should handle empty/zero duration', () async {
-        final task = Task<int>.pending(
+        final task = Task<int, String?, Set<String>>.pending(
           cachingStrategy: CachingStrategy.temporal,
           cacheDuration: Duration.zero,
         );
@@ -539,7 +539,7 @@ void main() {
       });
 
       test('should work with complex data types', () async {
-        final task = Task<Map<String, dynamic>>.pending(
+        final task = Task<Map<String, dynamic>, String?, Set<String>>.pending(
           cachingStrategy: CachingStrategy.memoize,
         );
 
@@ -552,13 +552,13 @@ void main() {
 
       test('should handle tasks created with different constructors', () async {
         final tasks = [
-          Task<int>.pending(cachingStrategy: CachingStrategy.memoize),
-          Task<int>.running(cachingStrategy: CachingStrategy.memoize),
-          Task<int>.success(
+          Task<int, String?, Set<String>>.pending(cachingStrategy: CachingStrategy.memoize),
+          Task<int, String?, Set<String>>.running(cachingStrategy: CachingStrategy.memoize),
+          Task<int, String?, Set<String>>.success(
             data: 1,
             cachingStrategy: CachingStrategy.memoize,
           ),
-          Task<int>.failure(
+          Task<int, String?, Set<String>>.failure(
             error: 'err',
             cachingStrategy: CachingStrategy.memoize,
           ),
@@ -581,7 +581,7 @@ void main() {
 
       test('should handle rapid refresh calls', () async {
         var executionCount = 0;
-        final task = Task<int>.pending(
+        final task = Task<int, String?, Set<String>>.pending(
           cachingStrategy: CachingStrategy.memoize,
         );
 
@@ -600,10 +600,10 @@ void main() {
       });
 
       test('should maintain separate caches for different tasks', () async {
-        final task1 = Task<int>.pending(
+        final task1 = Task<int, String?, Set<String>>.pending(
           cachingStrategy: CachingStrategy.memoize,
         );
-        final task2 = Task<int>.pending(
+        final task2 = Task<int, String?, Set<String>>.pending(
           cachingStrategy: CachingStrategy.memoize,
         );
 
@@ -615,7 +615,7 @@ void main() {
       });
 
       test('should handle label and tags with caching', () async {
-        var task = Task<int>.pending(
+        var task = Task<int, String?, Set<String>>.pending(
           label: 'test-task',
           tags: {'important', 'cached'},
           cachingStrategy: CachingStrategy.memoize,
@@ -634,7 +634,7 @@ void main() {
     group('Real-world Scenarios', () {
       test('API call with memoization', () async {
         var apiCallCount = 0;
-        final task = Task<Map<String, dynamic>>.pending(
+        final task = Task<Map<String, dynamic>, String?, Set<String>>.pending(
           cachingStrategy: CachingStrategy.memoize,
           label: 'fetch-user',
         );
@@ -658,7 +658,7 @@ void main() {
 
       test('Expensive computation with temporal caching', () async {
         var computationCount = 0;
-        final task = Task<int>.pending(
+        final task = Task<int, String?, Set<String>>.pending(
           cachingStrategy: CachingStrategy.temporal,
           cacheDuration: const Duration(milliseconds: 200),
         );
@@ -686,7 +686,7 @@ void main() {
 
       test('User-triggered refresh', () async {
         var fetchCount = 0;
-        final task = Task<String>.pending(
+        final task = Task<String, String?, Set<String>>.pending(
           cachingStrategy: CachingStrategy.memoize,
         );
 
@@ -709,7 +709,7 @@ void main() {
       });
 
       test('Task lifecycle with caching', () async {
-        var task = Task<int>.pending(
+        var task = Task<int, String?, Set<String>>.pending(
           cachingStrategy: CachingStrategy.memoize,
         );
 

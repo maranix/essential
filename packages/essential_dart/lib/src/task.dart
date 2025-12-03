@@ -36,23 +36,25 @@ const Duration _kDefaultCacheDuration = Duration(minutes: 5);
 /// methods for state transitions and data transformations.
 ///
 /// The generic type [T] represents the type of data the task holds upon success.
-sealed class Task<T> {
+/// The generic type [Label] represents the type of the label (default: [String]?).
+/// The generic type [Tags] represents the type of the tags (default: [Set<String>]?).
+sealed class Task<T, Label, Tags> {
   /// Creates a [Task] with optional metadata.
   ///
-  /// - [label]: An optional string to identify or describe the task.
-  /// - [tags]: A set of strings for categorizing or filtering tasks.
+  /// - [label]: An optional label to identify or describe the task.
+  /// - [tags]: Optional tags for categorizing or filtering tasks.
   /// - [initialData]: Optional initial data that can be used as a fallback.
   /// - [cachingStrategy]: The caching strategy to use (default: none).
   /// - [cacheDuration]: Duration for temporal caching (default: 5 minutes).
   Task({
     this.label,
-    this.tags = const {},
+    this.tags,
     this.initialData,
     CachingStrategy? cachingStrategy,
     Duration? cacheDuration,
     Memoizer<T>? memoizer,
     AsyncCache<T>? asyncCache,
-  }) : cachingStrategy = cachingStrategy ?? .none,
+  }) : cachingStrategy = cachingStrategy ?? CachingStrategy.none,
        cacheDuration = cacheDuration ?? _kDefaultCacheDuration,
        _memoizer =
            memoizer ??
@@ -73,11 +75,11 @@ sealed class Task<T> {
   /// - [tags]: Optional task tags.
   factory Task.pending({
     T? initialData,
-    String? label,
-    Set<String> tags,
+    Label? label,
+    Tags? tags,
     CachingStrategy cachingStrategy,
     Duration? cacheDuration,
-  }) = TaskPending<T>;
+  }) = TaskPending<T, Label, Tags>;
 
   /// Creates a [Task] in the [TaskState.running] state.
   ///
@@ -90,11 +92,11 @@ sealed class Task<T> {
   factory Task.running({
     T? initialData,
     T? previousData,
-    String? label,
-    Set<String> tags,
+    Label? label,
+    Tags? tags,
     CachingStrategy cachingStrategy,
     Duration? cacheDuration,
-  }) = TaskRunning<T>;
+  }) = TaskRunning<T, Label, Tags>;
 
   /// Creates a [Task] in the [TaskState.refreshing] state.
   ///
@@ -108,11 +110,11 @@ sealed class Task<T> {
   factory Task.refreshing({
     T previousData,
     T? initialData,
-    String? label,
-    Set<String> tags,
+    Label? label,
+    Tags? tags,
     CachingStrategy cachingStrategy,
     Duration? cacheDuration,
-  }) = TaskRefreshing<T>;
+  }) = TaskRefreshing<T, Label, Tags>;
 
   /// Creates a [Task] in the [TaskState.retrying] state.
   ///
@@ -125,11 +127,11 @@ sealed class Task<T> {
   factory Task.retrying({
     T previousData,
     T? initialData,
-    String? label,
-    Set<String> tags,
+    Label? label,
+    Tags? tags,
     CachingStrategy cachingStrategy,
     Duration? cacheDuration,
-  }) = TaskRetrying<T>;
+  }) = TaskRetrying<T, Label, Tags>;
 
   /// Creates a [Task] in the [TaskState.success] state.
   ///
@@ -143,11 +145,11 @@ sealed class Task<T> {
   factory Task.success({
     required T data,
     T? initialData,
-    String? label,
-    Set<String> tags,
+    Label? label,
+    Tags? tags,
     CachingStrategy cachingStrategy,
     Duration? cacheDuration,
-  }) = TaskSuccess<T>;
+  }) = TaskSuccess<T, Label, Tags>;
 
   /// Creates a [Task] in the [TaskState.failure] state.
   ///
@@ -164,20 +166,20 @@ sealed class Task<T> {
     StackTrace? stackTrace,
     T? previousData,
     T? initialData,
-    String? label,
-    Set<String> tags,
+    Label? label,
+    Tags? tags,
     CachingStrategy cachingStrategy,
     Duration? cacheDuration,
-  }) = TaskFailure<T>;
+  }) = TaskFailure<T, Label, Tags>;
 
   /// The current state of the task.
   TaskState get state;
 
   /// An optional label to identify the task.
-  final String? label;
+  final Label? label;
 
-  /// A set of tags associated with the task.
-  final Set<String> tags;
+  /// Optional tags associated with the task.
+  final Tags? tags;
 
   /// The caching strategy for this task.
   final CachingStrategy cachingStrategy;
@@ -205,11 +207,20 @@ sealed class Task<T> {
   /// print(task.isSuccess); // true
   /// print((task as TaskSuccess).data); // 42
   /// ```
-  static Task<T> runSync<T>(T Function() callback) {
+  static Task<T, Label, Tags> runSync<T, Label, Tags>(
+    T Function() callback, {
+    Label? label,
+    Tags? tags,
+  }) {
     try {
-      return Task.success(data: callback());
+      return Task.success(data: callback(), label: label, tags: tags);
     } on Exception catch (error, stackTrace) {
-      return Task.failure(error: error, stackTrace: stackTrace);
+      return Task.failure(
+        error: error,
+        stackTrace: stackTrace,
+        label: label,
+        tags: tags,
+      );
     }
   }
 
@@ -225,11 +236,20 @@ sealed class Task<T> {
   ///   return 'Result';
   /// });
   /// ```
-  static Future<Task<T>> run<T>(FutureOr<T> Function() callback) async {
+  static Future<Task<T, Label, Tags>> run<T, Label, Tags>(
+    FutureOr<T> Function() callback, {
+    Label? label,
+    Tags? tags,
+  }) async {
     try {
-      return Task.success(data: await callback());
+      return Task.success(data: await callback(), label: label, tags: tags);
     } on Exception catch (error, stackTrace) {
-      return Task.failure(error: error, stackTrace: stackTrace);
+      return Task.failure(
+        error: error,
+        stackTrace: stackTrace,
+        label: label,
+        tags: tags,
+      );
     }
   }
 
@@ -248,12 +268,21 @@ sealed class Task<T> {
   ///   print(task.state); // running, then success
   /// });
   /// ```
-  static Stream<Task<T>> watch<T>(FutureOr<T> Function() callback) async* {
-    yield Task.running();
+  static Stream<Task<T, Label, Tags>> watch<T, Label, Tags>(
+    FutureOr<T> Function() callback, {
+    Label? label,
+    Tags? tags,
+  }) async* {
+    yield Task.running(label: label, tags: tags);
     try {
-      yield Task.success(data: await callback());
+      yield Task.success(data: await callback(), label: label, tags: tags);
     } on Exception catch (error, stackTrace) {
-      yield Task.failure(error: error, stackTrace: stackTrace);
+      yield Task.failure(
+        error: error,
+        stackTrace: stackTrace,
+        label: label,
+        tags: tags,
+      );
     }
   }
 
@@ -326,7 +355,7 @@ sealed class Task<T> {
 }
 
 /// Implementation of [Task] in the pending state.
-final class TaskPending<T> extends Task<T> {
+final class TaskPending<T, Label, Tags> extends Task<T, Label, Tags> {
   /// Constructs a [TaskPending] instance.
   TaskPending({
     super.initialData,
@@ -343,7 +372,7 @@ final class TaskPending<T> extends Task<T> {
 }
 
 /// Implementation of [Task] in the running state.
-final class TaskRunning<T> extends Task<T> {
+final class TaskRunning<T, Label, Tags> extends Task<T, Label, Tags> {
   /// Constructs a [TaskRunning] instance.
   TaskRunning({
     this.previousData,
@@ -364,7 +393,7 @@ final class TaskRunning<T> extends Task<T> {
 }
 
 /// Implementation of [Task] in the refreshing state.
-final class TaskRefreshing<T> extends Task<T> {
+final class TaskRefreshing<T, Label, Tags> extends Task<T, Label, Tags> {
   /// Constructs a [TaskRefreshing] instance.
   TaskRefreshing({
     this.previousData,
@@ -385,7 +414,7 @@ final class TaskRefreshing<T> extends Task<T> {
 }
 
 /// Implementation of [Task] in the retrying state.
-final class TaskRetrying<T> extends Task<T> {
+final class TaskRetrying<T, Label, Tags> extends Task<T, Label, Tags> {
   /// Constructs a [TaskRetrying] instance.
   TaskRetrying({
     this.previousData,
@@ -406,7 +435,7 @@ final class TaskRetrying<T> extends Task<T> {
 }
 
 /// Implementation of [Task] in the success state.
-final class TaskSuccess<T> extends Task<T> {
+final class TaskSuccess<T, Label, Tags> extends Task<T, Label, Tags> {
   /// Constructs a [TaskSuccess] instance.
   TaskSuccess({
     required this.data,
@@ -427,7 +456,7 @@ final class TaskSuccess<T> extends Task<T> {
 }
 
 /// Implementation of [Task] in the failure state.
-final class TaskFailure<T> extends Task<T> {
+final class TaskFailure<T, Label, Tags> extends Task<T, Label, Tags> {
   /// Constructs a [TaskFailure] instance.
   TaskFailure({
     required this.error,
@@ -456,7 +485,7 @@ final class TaskFailure<T> extends Task<T> {
 }
 
 /// Extension providing convenience properties for checking the state of a [Task].
-extension TaskInstancePropertiesX<T> on Task<T> {
+extension TaskInstancePropertiesX<T, Label, Tags> on Task<T, Label, Tags> {
   /// Returns `true` if the task is in the [TaskState.pending] state.
   bool get isPending => state == TaskState.pending;
 
@@ -490,26 +519,30 @@ extension TaskInstancePropertiesX<T> on Task<T> {
   };
 
   /// Returns this task as [TaskPending] or throws [StateError].
-  TaskPending<T> get pending => _checkState<TaskPending<T>>(TaskState.pending);
+  TaskPending<T, Label, Tags> get pending =>
+      _checkState<TaskPending<T, Label, Tags>>(TaskState.pending);
 
   /// Returns this task as [TaskRunning] or throws [StateError].
-  TaskRunning<T> get running => _checkState<TaskRunning<T>>(TaskState.running);
+  TaskRunning<T, Label, Tags> get running =>
+      _checkState<TaskRunning<T, Label, Tags>>(TaskState.running);
 
   /// Returns this task as [TaskRefreshing] or throws [StateError].
-  TaskRefreshing<T> get refreshing =>
-      _checkState<TaskRefreshing<T>>(TaskState.refreshing);
+  TaskRefreshing<T, Label, Tags> get refreshing =>
+      _checkState<TaskRefreshing<T, Label, Tags>>(TaskState.refreshing);
 
   /// Returns this task as [TaskRetrying] or throws [StateError].
-  TaskRetrying<T> get retrying =>
-      _checkState<TaskRetrying<T>>(TaskState.retrying);
+  TaskRetrying<T, Label, Tags> get retrying =>
+      _checkState<TaskRetrying<T, Label, Tags>>(TaskState.retrying);
 
   /// Returns this task as [TaskSuccess] or throws [StateError].
-  TaskSuccess<T> get success => _checkState<TaskSuccess<T>>(TaskState.success);
+  TaskSuccess<T, Label, Tags> get success =>
+      _checkState<TaskSuccess<T, Label, Tags>>(TaskState.success);
 
   /// Returns this task as [TaskFailure] or throws [StateError].
-  TaskFailure<T> get failure => _checkState<TaskFailure<T>>(TaskState.failure);
+  TaskFailure<T, Label, Tags> get failure =>
+      _checkState<TaskFailure<T, Label, Tags>>(TaskState.failure);
 
-  S _checkState<S extends Task<T>>(TaskState expectedState) {
+  S _checkState<S extends Task<T, Label, Tags>>(TaskState expectedState) {
     if (this is S) {
       return this as S;
     }
@@ -523,12 +556,12 @@ extension TaskInstancePropertiesX<T> on Task<T> {
   }
 }
 
-extension TaskInstanceTransitionX<T> on Task<T> {
+extension TaskInstanceTransitionX<T, Label, Tags> on Task<T, Label, Tags> {
   /// Transitions this task to a pending state.
   ///
   /// Preserves label and tags. Optionally updates initialData.
-  Task<T> toPending({T? initialData}) {
-    return TaskPending<T>(
+  Task<T, Label, Tags> toPending({T? initialData}) {
+    return TaskPending<T, Label, Tags>(
       initialData: initialData ?? this.initialData,
       label: label,
       tags: tags,
@@ -543,8 +576,8 @@ extension TaskInstanceTransitionX<T> on Task<T> {
   ///
   /// Preserves label, tags, and initialData.
   /// The current effective data becomes previousData in the new state.
-  Task<T> toRunning() {
-    return TaskRunning<T>(
+  Task<T, Label, Tags> toRunning() {
+    return TaskRunning<T, Label, Tags>(
       previousData: effectiveData,
       initialData: initialData,
       label: label,
@@ -561,8 +594,8 @@ extension TaskInstanceTransitionX<T> on Task<T> {
   /// Preserves label, tags, and initialData.
   /// The current effective data becomes previousData in the new state.
   /// If there's no effective data, previousData will be null.
-  Task<T> toRefreshing() {
-    return TaskRefreshing<T>(
+  Task<T, Label, Tags> toRefreshing() {
+    return TaskRefreshing<T, Label, Tags>(
       previousData: effectiveData,
       initialData: initialData,
       label: label,
@@ -579,8 +612,8 @@ extension TaskInstanceTransitionX<T> on Task<T> {
   /// Preserves label, tags, and initialData.
   /// The current effective data becomes previousData in the new state.
   /// If there's no effective data, previousData will be null.
-  Task<T> toRetrying() {
-    return TaskRetrying<T>(
+  Task<T, Label, Tags> toRetrying() {
+    return TaskRetrying<T, Label, Tags>(
       previousData: effectiveData,
       initialData: initialData,
       label: label,
@@ -595,8 +628,8 @@ extension TaskInstanceTransitionX<T> on Task<T> {
   /// Transitions this task to a success state with the provided [data].
   ///
   /// Preserves label, tags, and initialData.
-  Task<T> toSuccess(T data) {
-    return TaskSuccess<T>(
+  Task<T, Label, Tags> toSuccess(T data) {
+    return TaskSuccess<T, Label, Tags>(
       data: data,
       initialData: initialData,
       label: label,
@@ -613,8 +646,8 @@ extension TaskInstanceTransitionX<T> on Task<T> {
   /// Preserves label, tags, and initialData.
   /// The current effective data becomes previousData in the new state.
   /// Optionally includes a [stackTrace].
-  Task<T> toFailure(Object error, {StackTrace? stackTrace}) {
-    return TaskFailure<T>(
+  Task<T, Label, Tags> toFailure(Object error, {StackTrace? stackTrace}) {
+    return TaskFailure<T, Label, Tags>(
       error: error,
       stackTrace: stackTrace,
       previousData: effectiveData,
@@ -642,8 +675,8 @@ extension TaskInstanceTransitionX<T> on Task<T> {
   /// Throws [StateError] if:
   /// - Transitioning to [TaskState.success] and [data] is null.
   /// - Transitioning to [TaskState.failure] and [error] is null.
-  Task<T> from(
-    Task<T> old, {
+  Task<T, Label, Tags> from(
+    Task<T, Label, Tags> old, {
     required TaskState newTask,
     T? data,
     Object? error,
@@ -676,63 +709,72 @@ extension TaskInstanceTransitionX<T> on Task<T> {
   };
 }
 
-extension TaskInstanceTransformX<T> on Task<T> {
-  /// Transform data for all states, producing Task<U>
-  Task<U> mapData<U>(U Function(T data) transform) => switch (this) {
-    TaskSuccess(data: final d) => TaskSuccess(
-      data: transform(d),
-      label: label,
-      tags: tags,
-      initialData: initialData as U?,
-    ),
-    TaskRunning(previousData: final d) => TaskRunning<U>(
-      previousData: d != null ? transform(d) : null,
-      label: label,
-      tags: tags,
-      initialData: initialData as U?,
-    ),
-    TaskRefreshing(previousData: final d) => TaskRefreshing<U>(
-      previousData: d != null ? transform(d) : null,
-      label: label,
-      tags: tags,
-      initialData: initialData as U?,
-    ),
-    TaskRetrying(previousData: final d) => TaskRetrying<U>(
-      previousData: d != null ? transform(d) : null,
-      label: label,
-      tags: tags,
-      initialData: initialData as U?,
-    ),
-    TaskFailure(previousData: final d, error: final e) => TaskFailure<U>(
-      previousData: d != null ? transform(d) : null,
-      error: e,
-      label: label,
-      tags: tags,
-      initialData: initialData as U?,
-    ),
-    TaskPending() => TaskPending<U>(
-      initialData: initialData != null ? transform(initialData as T) : null,
-      label: label,
-      tags: tags,
-    ),
-  };
+extension TaskInstanceTransformX<T, Label, Tags> on Task<T, Label, Tags> {
+  /// Transform data for all states, producing Task<U, Label, Tags>
+  Task<U, Label, Tags> mapData<U>(U Function(T data) transform) =>
+      switch (this) {
+        TaskSuccess(data: final d) => TaskSuccess(
+          data: transform(d),
+          label: label,
+          tags: tags,
+          initialData: initialData != null ? transform(initialData as T) : null,
+        ),
+        TaskRunning(previousData: final d) => TaskRunning<U, Label, Tags>(
+          previousData: d != null ? transform(d) : null,
+          label: label,
+          tags: tags,
+          initialData: initialData != null ? transform(initialData as T) : null,
+        ),
+        TaskRefreshing(previousData: final d) => TaskRefreshing<U, Label, Tags>(
+          previousData: d != null ? transform(d) : null,
+          label: label,
+          tags: tags,
+          initialData: initialData != null ? transform(initialData as T) : null,
+        ),
+        TaskRetrying(previousData: final d) => TaskRetrying<U, Label, Tags>(
+          previousData: d != null ? transform(d) : null,
+          label: label,
+          tags: tags,
+          initialData: initialData != null ? transform(initialData as T) : null,
+        ),
+        TaskFailure(previousData: final d, error: final e) =>
+          TaskFailure<U, Label, Tags>(
+            previousData: d != null ? transform(d) : null,
+            error: e,
+            label: label,
+            tags: tags,
+            initialData: initialData != null
+                ? transform(initialData as T)
+                : null,
+          ),
+        TaskPending() => TaskPending<U, Label, Tags>(
+          initialData: initialData != null ? transform(initialData as T) : null,
+          label: label,
+          tags: tags,
+        ),
+      };
 
   /// Transform error in failure state
-  Task<T> mapError(Object Function(Object error) transform) => switch (this) {
-    TaskFailure(error: final e, previousData: final d, stackTrace: final s) =>
-      TaskFailure(
-        error: transform(e),
-        previousData: d,
-        stackTrace: s,
-        label: label,
-        tags: tags,
-        initialData: initialData,
-      ),
-    _ => this,
-  };
+  Task<T, Label, Tags> mapError(Object Function(Object error) transform) =>
+      switch (this) {
+        TaskFailure(
+          error: final e,
+          previousData: final d,
+          stackTrace: final s,
+        ) =>
+          TaskFailure(
+            error: transform(e),
+            previousData: d,
+            stackTrace: s,
+            label: label,
+            tags: tags,
+            initialData: initialData,
+          ),
+        _ => this,
+      };
 
   /// General transform helper
-  Task<T> transform({
+  Task<T, Label, Tags> transform({
     T? Function(T? oldData)? updateData,
     Object? Function(Object? oldError)? updateError,
     T? Function(T? oldPrevious)? updatePrevious,
@@ -778,118 +820,122 @@ extension TaskInstanceTransformX<T> on Task<T> {
   };
 }
 
-extension TaskInstanceCopyWithX<T> on Task<T> {
-  Task<T> copyWith({
+extension TaskInstanceCopyWithX<T, Label, Tags> on Task<T, Label, Tags> {
+  Task<T, Label, Tags> copyWith({
     T? initialData,
-    String? label,
-    Set<String>? tags,
+    Label? label,
+    Tags? tags,
     T? previousData,
     T? data,
     Object? error,
     StackTrace? stackTrace,
   }) {
     return switch (this) {
-      TaskPending<T>() => TaskPending(
+      TaskPending<T, Label, Tags>() => TaskPending(
         initialData: initialData ?? this.initialData,
         label: label ?? this.label,
         tags: tags ?? this.tags,
       ),
 
-      TaskRunning<T>(previousData: final p) => TaskRunning(
+      TaskRunning<T, Label, Tags>(previousData: final p) => TaskRunning(
         initialData: initialData ?? this.initialData,
         previousData: previousData ?? p,
         label: label ?? this.label,
         tags: tags ?? this.tags,
       ),
 
-      TaskRefreshing<T>(previousData: final p) => TaskRefreshing(
+      TaskRefreshing<T, Label, Tags>(previousData: final p) => TaskRefreshing(
         initialData: initialData ?? this.initialData,
         previousData: previousData ?? p,
         label: label ?? this.label,
         tags: tags ?? this.tags,
       ),
 
-      TaskRetrying<T>(previousData: final p) => TaskRetrying(
+      TaskRetrying<T, Label, Tags>(previousData: final p) => TaskRetrying(
         initialData: initialData ?? this.initialData,
         previousData: previousData ?? p,
         label: label ?? this.label,
         tags: tags ?? this.tags,
       ),
 
-      TaskSuccess<T>(data: final d) => TaskSuccess(
-        initialData: initialData ?? this.initialData,
+      TaskSuccess<T, Label, Tags>(data: final d) => TaskSuccess(
         data: data ?? d,
+        initialData: initialData ?? this.initialData,
         label: label ?? this.label,
         tags: tags ?? this.tags,
       ),
-      TaskFailure<T>(
+
+      TaskFailure<T, Label, Tags>(
         error: final e,
         stackTrace: final s,
         previousData: final p,
       ) =>
         TaskFailure(
-          initialData: initialData ?? this.initialData,
           error: error ?? e,
           stackTrace: stackTrace ?? s,
           previousData: previousData ?? p,
+          initialData: initialData ?? this.initialData,
           label: label ?? this.label,
           tags: tags ?? this.tags,
         ),
     };
   }
 
-  Task<T> copyWithOrNull({
+  Task<T, Label, Tags> copyWithOrNull({
     T? initialData,
-    String? label,
-    Set<String>? tags,
+    Label? label,
+    Tags? tags,
     T? previousData,
     T? data,
     Object? error,
     StackTrace? stackTrace,
   }) {
     return switch (this) {
-      TaskPending<T>() => TaskPending(
+      TaskPending<T, Label, Tags>() => TaskPending(
         initialData: initialData,
         label: label,
-        tags: tags ?? const {},
+        tags: tags,
       ),
 
-      TaskRunning<T>() => TaskRunning(
-        initialData: initialData,
-        previousData: previousData,
-        label: label,
-        tags: tags ?? const {},
-      ),
-
-      TaskRefreshing<T>() => TaskRefreshing(
+      TaskRunning<T, Label, Tags>() => TaskRunning(
         initialData: initialData,
         previousData: previousData,
         label: label,
-        tags: tags ?? const {},
+        tags: tags,
       ),
 
-      TaskRetrying<T>() => TaskRetrying(
+      TaskRefreshing<T, Label, Tags>() => TaskRefreshing(
         initialData: initialData,
         previousData: previousData,
         label: label,
-        tags: tags ?? const {},
+        tags: tags,
       ),
 
-      TaskSuccess<T>() => TaskSuccess(
+      TaskRetrying<T, Label, Tags>() => TaskRetrying(
+        initialData: initialData,
+        previousData: previousData,
+        label: label,
+        tags: tags,
+      ),
+
+      TaskSuccess<T, Label, Tags>() => TaskSuccess(
         initialData: initialData,
         data: data as T,
         label: label,
-        tags: tags ?? const {},
+        tags: tags,
       ),
 
-      TaskFailure<T>() => TaskFailure(
+      TaskFailure<T, Label, Tags>() => TaskFailure(
         initialData: initialData,
         error: error!,
         stackTrace: stackTrace,
         previousData: previousData,
         label: label,
-        tags: tags ?? const {},
+        tags: tags,
       ),
     };
   }
 }
+
+/// A [Task] with default types for label ([String]?) and tags ([Set<String>]).
+typedef SimpleTask<T> = Task<T, String?, Set<String>>;
