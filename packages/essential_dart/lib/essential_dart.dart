@@ -54,11 +54,66 @@
 /// final task = Task<int>.success(data: 42);
 /// final doubled = task.mapData((data) => data * 2);
 /// ```
+///
+/// ## Stream Transformers
+///
+/// Powerful stream transformers for common patterns:
+///
+/// ### StringSplitter
+///
+/// Split string streams by separator (single or multi-character):
+///
+/// ```dart
+/// Stream.fromIterable(['Hello,', 'World!'])
+///   .transform(StringSplitter(','))
+///   .listen(print); // Prints 'Hello' and 'World!'
+/// ```
+///
+/// ### Debounce
+///
+/// Filter out rapid-fire events, emitting only after a quiet period:
+///
+/// ```dart
+/// searchStream
+///   .transform(Debounce(Duration(milliseconds: 300)))
+///   .listen(performSearch);
+/// ```
+///
+/// ### Throttle
+///
+/// Limit event rate by ignoring events within a time window:
+///
+/// ```dart
+/// clickStream
+///   .transform(Throttle(Duration(milliseconds: 500)))
+///   .listen(handleClick);
+/// ```
+///
+/// ### BufferCount
+///
+/// Collect items into fixed-size batches:
+///
+/// ```dart
+/// dataStream
+///   .transform(BufferCount(10))
+///   .listen(processBatch);
+/// ```
+///
+/// ### BufferTime
+///
+/// Collect items over time intervals:
+///
+/// ```dart
+/// eventStream
+///   .transform(BufferTime(Duration(seconds: 1)))
+///   .listen(processEvents);
+/// ```
 
 library;
 
 export 'src/memoizer.dart';
 export 'src/retry.dart';
+export 'src/stream_transformer.dart';
 export 'src/task.dart';
 export 'src/task_group.dart';
 export 'src/types.dart';

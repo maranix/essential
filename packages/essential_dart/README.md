@@ -268,6 +268,77 @@ await networkRetry(() => fetchPosts());
 await networkRetry(() => fetchComments());
 ```
 
+### Stream Transformers
+
+Powerful stream transformers for common patterns:
+
+#### StringSplitter
+
+Split string streams by separator (supports single or multi-character separators):
+
+```dart
+import 'package:essential_dart/essential_dart.dart';
+
+// Split by newline (default)
+Stream.fromIterable(['line1\nline2', '\nline3'])
+  .transform(StringSplitter())
+  .listen(print); // Prints: line1, line2, line3
+
+// Split by custom separator
+Stream.fromIterable(['a,b', ',c'])
+  .transform(StringSplitter(','))
+  .listen(print); // Prints: a, b, c
+
+// Multi-character separator
+Stream.fromIterable(['a--b', '--c'])
+  .transform(StringSplitter('--'))
+  .listen(print); // Prints: a, b, c
+```
+
+#### Debounce
+
+Filter out rapid-fire events, emitting only after a quiet period:
+
+```dart
+// Search as user types
+searchController.stream
+  .transform(Debounce(Duration(milliseconds: 300)))
+  .listen(performSearch);
+```
+
+#### Throttle
+
+Limit event rate by ignoring events within a time window:
+
+```dart
+// Prevent double-clicks
+buttonClickStream
+  .transform(Throttle(Duration(milliseconds: 500)))
+  .listen(handleClick);
+```
+
+#### BufferCount
+
+Collect items into fixed-size batches:
+
+```dart
+// Process data in batches of 10
+dataStream
+  .transform(BufferCount(10))
+  .listen((batch) => processBatch(batch));
+```
+
+#### BufferTime
+
+Collect items over time intervals:
+
+```dart
+// Aggregate events every second
+eventStream
+  .transform(BufferTime(Duration(seconds: 1)))
+  .listen((events) => processEvents(events));
+```
+
 ## License
 
 This project is licensed under the MIT License.

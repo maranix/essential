@@ -43,8 +43,8 @@ void main() {
 
       test('should be completed if all tasks are success', () {
         final group = TaskGroup.uniform({
-          '1': Task.success(data: 1),
-          '2': Task.success(data: 2),
+          '1': Task<int, String?, Set<String>>.success(data: 1),
+          '2': Task<int, String?, Set<String>>.success(data: 2),
         });
         expect(group.state, TaskGroupState.completed);
       });
@@ -83,13 +83,17 @@ void main() {
       });
 
       test('should remove task', () {
-        var group = TaskGroup<int, String?, Set<String>>.uniform({'1': Task.pending()});
+        var group = TaskGroup<int, String?, Set<String>>.uniform({
+          '1': Task.pending(),
+        });
         group = group.removeTask('1');
         expect(group.taskCount, 0);
       });
 
       test('should update task', () {
-        var group = TaskGroup<int, String?, Set<String>>.uniform({'1': Task.pending()});
+        var group = TaskGroup<int, String?, Set<String>>.uniform({
+          '1': Task.pending(),
+        });
         group = group.updateTask('1', (t) => t.toRunning());
         expect(group.getTask('1')!.isRunning, true);
       });
@@ -103,8 +107,14 @@ void main() {
         group = await group.runAll((key, task) async => int.parse(key));
 
         expect(group.allSuccess, true);
-        expect(group.getTask<TaskSuccess<int, String?, Set<String>>>('1')!.data, 1);
-        expect(group.getTask<TaskSuccess<int, String?, Set<String>>>('2')!.data, 2);
+        expect(
+          group.getTask<TaskSuccess<int, String?, Set<String>>>('1')!.data,
+          1,
+        );
+        expect(
+          group.getTask<TaskSuccess<int, String?, Set<String>>>('2')!.data,
+          2,
+        );
       });
 
       test('should retry failed tasks', () async {
@@ -116,8 +126,14 @@ void main() {
         group = await group.retryFailed((key, task) async => 1);
 
         expect(group.allSuccess, true);
-        expect(group.getTask<TaskSuccess<int, String?, Set<String>>>('1')!.data, 1);
-        expect(group.getTask<TaskSuccess<int, String?, Set<String>>>('2')!.data, 2);
+        expect(
+          group.getTask<TaskSuccess<int, String?, Set<String>>>('1')!.data,
+          1,
+        );
+        expect(
+          group.getTask<TaskSuccess<int, String?, Set<String>>>('2')!.data,
+          2,
+        );
       });
     });
 
@@ -174,7 +190,9 @@ void main() {
       });
 
       test('should preserve type after transition', () {
-        final mixed = TaskGroup.mixed<String?, Set<String>>({'1': Task<int, String?, Set<String>>.pending()});
+        final mixed = TaskGroup.mixed<String?, Set<String>>({
+          '1': Task<int, String?, Set<String>>.pending(),
+        });
         final running = mixed.toRunning();
         // Should still be mixed implementation (checked via behavior or reflection if needed)
         // But mainly we check it works.
@@ -184,14 +202,18 @@ void main() {
 
     group('Type Safety & Getters', () {
       test('getTask<S> should return task if type matches', () {
-        final group = TaskGroup.uniform({'1': Task<int, String?, Set<String>>.success(data: 1)});
+        final group = TaskGroup.uniform({
+          '1': Task<int, String?, Set<String>>.success(data: 1),
+        });
         final task = group.getTask<TaskSuccess<int, String?, Set<String>>>('1');
         expect(task, isNotNull);
         expect(task!.data, 1);
       });
 
       test('getTask<S> should throw TypeError if type mismatches', () {
-        final group = TaskGroup.uniform({'1': Task<int, String?, Set<String>>.success(data: 1)});
+        final group = TaskGroup.uniform({
+          '1': Task<int, String?, Set<String>>.success(data: 1),
+        });
         expect(
           () => group.getTask<TaskFailure<int, String?, Set<String>>>('1'),
           throwsA(isA<TypeError>()),
@@ -200,7 +222,10 @@ void main() {
 
       test('getTask<S> should return null if key missing', () {
         final group = TaskGroup.uniform({});
-        expect(group.getTask<TaskSuccess<int, String?, Set<String>>>('1'), isNull);
+        expect(
+          group.getTask<TaskSuccess<int, String?, Set<String>>>('1'),
+          isNull,
+        );
       });
 
       test('getter .success should return data', () {

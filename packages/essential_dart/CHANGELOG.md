@@ -30,6 +30,12 @@
 - Added `SimpleTaskGroup<T>` type alias for `TaskGroup<T, String?, Set<String>>`
 - Support for custom Label and Tags types (enums, custom classes, etc.)
 - Full type safety for labels and tags throughout the API
+- **Stream Transformers**: Added powerful stream transformation utilities:
+  - `StringSplitter`: Split string streams by separator (single or multi-character)
+  - `Debounce`: Filter rapid-fire events, emit after quiet period
+  - `Throttle`: Limit event rate by ignoring events within time window
+  - `BufferCount`: Collect items into fixed-size batches
+  - `BufferTime`: Collect items over time intervals
 
 ## 1.3.0
 
