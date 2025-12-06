@@ -9,6 +9,17 @@ define confirm
 	fi
 endef
 
+# Run test
+test_dart:
+	dart test packages/essential_dart
+
+test_flutter:
+	dart test packages/essential_flutter
+
+test:
+	@$(MAKE) test_dart
+	@$(MAKE) test_flutter
+
 # Dry-run targets
 dry_run_dart:
 	dart pub -C packages/essential_dart publish --dry-run

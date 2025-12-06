@@ -17,7 +17,7 @@ topics:
   - flutter
 
 dependencies:
-  essential_dart: ^1.0.0
+  essential_dart: any
   flutter:
     sdk: flutter
 
