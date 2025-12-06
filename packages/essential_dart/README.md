@@ -127,6 +127,7 @@ final doubled = task.mapData((data) => data * 2);
 // Transform error
 final failure = Task<int>.failure(error: Exception('Error'));
 final wrapped = failure.mapError((e) => CustomError(e));
+```
 
 #### Capturing Execution
 
