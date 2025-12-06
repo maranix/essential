@@ -219,6 +219,13 @@ if (userCount != null) {
 
 // Retry only failed tasks
 group = await group.retryFailed((key, task) => fetchCount(key));
+
+// Customize execution strategy (parallel or sequential)
+// Default is TaskGroupExecutionStrategy.parallel
+group = await group.runAll(
+  (key, task) => fetchCount(key),
+  strategy: TaskGroupExecutionStrategy.sequential,
+);
 ```
 
 ### Retry

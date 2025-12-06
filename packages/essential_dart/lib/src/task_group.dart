@@ -3,8 +3,6 @@ import 'dart:async';
 import 'task.dart';
 
 /// Represents the aggregate state of a task group.
-///
-/// This enum describes the overall state derived from all tasks in the group.
 enum TaskGroupState {
   /// No tasks in the group, or all tasks are pending.
   idle,
@@ -20,6 +18,15 @@ enum TaskGroupState {
 
   /// All tasks have failed.
   failed,
+}
+
+/// Defines the execution strategy for batch operations.
+enum TaskGroupExecutionStrategy {
+  /// Executes tasks concurrently.
+  parallel,
+
+  /// Executes tasks one after another.
+  sequential,
 }
 
 /// A sealed class for managing collections of [Task] instances.
@@ -497,9 +504,6 @@ final class _HeterogeneousTaskGroup<Label, Tags>
 /// Extension providing query and filtering operations for [TaskGroup].
 ///
 /// These work on both homogeneous and heterogeneous task groups.
-/// Extension providing query and filtering operations for [TaskGroup].
-///
-/// These work on both homogeneous and heterogeneous task groups.
 extension TaskGroupQueryX<T, Label, Tags> on TaskGroup<T, Label, Tags> {
   /// Returns all tasks that have the specified [label].
   ///
@@ -512,42 +516,39 @@ extension TaskGroupQueryX<T, Label, Tags> on TaskGroup<T, Label, Tags> {
       tasks.entries.where((entry) => entry.value.label == label),
     );
   }
+}
 
+/// Extension providing query and filtering operations for [TaskGroup] with [Set] tags.
+extension TaskGroupSetTagsX<T, Label, S> on TaskGroup<T, Label, Set<S>> {
   /// Returns all tasks that have all of the specified [tags].
   ///
   /// Example:
   /// ```dart
   /// final criticalTasks = group.withTags({'critical', 'api'});
   /// ```
-  Map<String, Task<T, Label, Tags>> withTags(Tags tags) {
-    // Note: This assumes Tags is a Set or collection with containsAll.
-    // Since Tags is generic, we can't assume it has containsAll unless we constrain it.
-    // However, the user requested generic Tags.
-    // If Tags is not a Set, this method might not make sense or needs to be adapted.
-    // For now, I will assume Tags is a Set-like structure or the user will use Set<String>.
-    // But wait, if Tags is generic, I can't call containsAll on it unless I cast or constrain.
-    // The user said "L represents the type of the label and G represents the type of the tags".
-    // If G is Set<String>, it works. If G is something else, this method is problematic.
-    // I should probably remove this method or make it specific to Set<String>?
-    // Or I can leave it but it will fail compilation if Tags doesn't have containsAll.
-    // Actually, I can't call containsAll on generic Tags.
-    // I should probably remove `withTags` and `withAnyTag` from the generic extension
-    // and put them in a specialized extension for `TaskGroup<T, Label, Set<S>>`?
-    // Or just comment them out for now?
-    // The user wants "generic type parameters for label and tags".
-    // If I change Tags to G, I lose the ability to assume it's a Set.
-    // So I should probably remove these methods from the generic extension.
-    // But that would break existing code.
-    // Existing code uses `Set<String>`.
-    // I can make an extension on `TaskGroup<T, Label, Set<S>>`.
-    // But I can't do that easily in Dart (no partial specialization for extensions like that easily without conflicts).
-    // Actually, I can do `extension TaskGroupSetTagsX<T, Label, S> on TaskGroup<T, Label, Set<S>>`.
-    // Let's do that.
-    throw UnimplementedError('This method is moved to TaskGroupSetTagsX');
+  Map<String, Task<T, Label, Set<S>>> withTags(Set<S> tags) {
+    return Map.fromEntries(
+      tasks.entries.where(
+        (entry) => entry.value.tags?.containsAll(tags) ?? false,
+      ),
+    );
+  }
+
+  /// Returns all tasks that have any of the specified [tags].
+  ///
+  /// Example:
+  /// ```dart
+  /// final taggedTasks = group.withAnyTag({'api', 'database'});
+  /// ```
+  Map<String, Task<T, Label, Set<S>>> withAnyTag(Set<S> tags) {
+    return Map.fromEntries(
+      tasks.entries.where(
+        (entry) => entry.value.tags?.any(tags.contains) ?? false,
+      ),
+    );
   }
 }
 
-/// Extension providing aggregate state properties for [TaskGroup].
 /// Extension providing aggregate state properties for [TaskGroup].
 extension TaskGroupStateX<T, Label, Tags> on TaskGroup<T, Label, Tags> {
   /// Returns `true` if the group is in the [TaskGroupState.idle] state.
@@ -642,24 +643,39 @@ extension TaskGroupHomogeneousOpsX<T, Label, Tags>
   /// });
   /// ```
   Future<TaskGroup<T, Label, Tags>> runAll(
-    Future<T> Function(String key, Task<T, Label, Tags> task) callback,
-  ) async {
+    Future<T> Function(String key, Task<T, Label, Tags> task) callback, {
+    TaskGroupExecutionStrategy strategy = TaskGroupExecutionStrategy.parallel,
+  }) async {
     // First, mark all as running
     final currentGroup = toRunning();
 
-    // TODO(maranix): Implement parallel execution or sequential?
     // For now, let's do parallel execution
-    final futures = currentGroup.tasks.entries.map((entry) async {
-      try {
-        final data = await callback(entry.key, entry.value);
-        return MapEntry(entry.key, entry.value.toSuccess(data));
-      } on Exception catch (e, s) {
-        return MapEntry(entry.key, entry.value.toFailure(e, stackTrace: s));
-      }
-    });
+    if (strategy == TaskGroupExecutionStrategy.parallel) {
+      final futures = currentGroup.tasks.entries.map((entry) async {
+        try {
+          final data = await callback(entry.key, entry.value);
+          return MapEntry(entry.key, entry.value.toSuccess(data));
+        } on Exception catch (e, s) {
+          return MapEntry(entry.key, entry.value.toFailure(e, stackTrace: s));
+        }
+      });
 
-    final entries = await Future.wait(futures);
-    return _createCopy(Map.fromEntries(entries));
+      final entries = await Future.wait(futures);
+      return _createCopy(Map.fromEntries(entries));
+    } else {
+      final newTasks = Map<String, Task<T, Label, Tags>>.from(
+        currentGroup.tasks,
+      );
+      for (final entry in currentGroup.tasks.entries) {
+        try {
+          final data = await callback(entry.key, entry.value);
+          newTasks[entry.key] = entry.value.toSuccess(data);
+        } on Exception catch (e, s) {
+          newTasks[entry.key] = entry.value.toFailure(e, stackTrace: s);
+        }
+      }
+      return _createCopy(newTasks);
+    }
   }
 
   /// Applies the [transform] function to all tasks.
@@ -805,8 +821,9 @@ extension TaskGroupStreamX<T, Label, Tags> on TaskGroup<T, Label, Tags> {
   /// });
   /// ```
   Stream<TaskGroup<T, Label, Tags>> watch(
-    Future<T> Function(String key, Task<T, Label, Tags> task) callback,
-  ) async* {
+    Future<T> Function(String key, Task<T, Label, Tags> task) callback, {
+    TaskGroupExecutionStrategy strategy = TaskGroupExecutionStrategy.parallel,
+  }) async* {
     // Emit initial running state
     var currentGroup = toRunning();
     yield currentGroup;
@@ -817,6 +834,28 @@ extension TaskGroupStreamX<T, Label, Tags> on TaskGroup<T, Label, Tags> {
 
     if (totalCount == 0) {
       await controller.close();
+      return;
+    }
+
+    if (strategy == TaskGroupExecutionStrategy.sequential) {
+      for (final entry in currentGroup.tasks.entries) {
+        final key = entry.key;
+        final task = entry.value;
+
+        try {
+          final data = await callback(key, task);
+          currentGroup = currentGroup.updateTask(
+            key,
+            (t) => t.toSuccess(data),
+          );
+        } on Exception catch (e, s) {
+          currentGroup = currentGroup.updateTask(
+            key,
+            (t) => t.toFailure(e, stackTrace: s),
+          );
+        }
+        yield currentGroup;
+      }
       return;
     }
 
@@ -846,7 +885,7 @@ extension TaskGroupStreamX<T, Label, Tags> on TaskGroup<T, Label, Tags> {
       }
 
       // Fire and forget, but errors are handled inside
-      await executeTask();
+      unawaited(executeTask());
     }
 
     yield* controller.stream;

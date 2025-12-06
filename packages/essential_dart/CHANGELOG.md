@@ -51,6 +51,9 @@
   - Query extensions (`withLabel`, `withTags`, `byState`, `where`).
   - State transition extensions (`toRunning`, `toPending`, `resetFailed`).
   - Stream support via `watch`.
+  - **Customizable Execution Strategy**:
+    - Added `TaskGroupExecutionStrategy` enum (`parallel`, `sequential`).
+    - `runAll` and `watch` now accept an optional `strategy` parameter (default: `parallel`).
 - Enhanced `Task` API:
   - Added type-safe state getters (`.success`, `.failure`, `.pending`, etc.) that throw detailed `StateError` if the state doesn't match.
   - Added `effectiveData` getter to retrieve data from current or previous states.
