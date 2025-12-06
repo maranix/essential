@@ -1,6 +1,6 @@
 name: essential_dart
 description: Reusable building blocks, patterns, and services for Dart to improve efficiency and code quality.
-version: 1.2.0
+version: 2.0.0
 repository: https://github.com/maranix/essential
 issue_tracker: https://github.com/maranix/essential/issues
 
@@ -18,7 +18,6 @@ topics:
 # Add regular dependencies here.
 dependencies:
   async: ^2.13.0
-  # path: ^1.9.0
 
 dev_dependencies:
   pedantic_mono: ^1.35.0

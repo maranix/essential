@@ -26,24 +26,7 @@
 
 ### New Features
 
-- Added `SimpleTask<T>` type alias for `Task<T, String?, Set<String>>`
-- Added `SimpleTaskGroup<T>` type alias for `TaskGroup<T, String?, Set<String>>`
-- Support for custom Label and Tags types (enums, custom classes, etc.)
-- Full type safety for labels and tags throughout the API
-- **Stream Transformers**: Added powerful stream transformation utilities:
-  - `StringSplitter`: Split string streams by separator (single or multi-character)
-  - `Debounce`: Filter rapid-fire events, emit after quiet period
-  - `Throttle`: Limit event rate by ignoring events within time window
-  - `BufferCount`: Collect items into fixed-size batches
-  - `BufferTime`: Collect items over time intervals
-- **Interval**: Added generic `Interval` class for working with ranges of comparable values (int, double, DateTime, etc.) with support for:
-  - Validation (`Interval.checked`)
-  - Set operations (`contains`, `containsInterval`, `overlaps`, `intersection`, `span`)
-  - Utility extensions for `num` (length) and `DateTime` (duration)
-
-
-## 1.3.0
-
+#### TaskGroup
 - Added `TaskGroup` API for managing collections of tasks with aggregate state.
   - Support for homogeneous (`TaskGroup.uniform`) and heterogeneous (`TaskGroup.mixed`) groups.
   - Aggregate state derivation (Active, Completed, Failed, Idle, Partial).
@@ -54,23 +37,28 @@
   - **Customizable Execution Strategy**:
     - Added `TaskGroupExecutionStrategy` enum (`parallel`, `sequential`).
     - `runAll` and `watch` now accept an optional `strategy` parameter (default: `parallel`).
-- Enhanced `Task` API:
-  - Added type-safe state getters (`.success`, `.failure`, `.pending`, etc.) that throw detailed `StateError` if the state doesn't match.
-  - Added `effectiveData` getter to retrieve data from current or previous states.
-  - Added caching support with `CachingStrategy` enum (none, memoize, temporal).
-  - Added `execute()` method for cached task execution.
-  - Added `invalidateCache()` method to clear cached results.
-  - Added `refresh()` method to invalidate cache and re-execute.
-  - Cache persists across state transitions.
-  - Default cache duration: 5 minutes for temporal strategy.
+- Added `SimpleTaskGroup<T>` type alias for `TaskGroup<T, String?, Set<String>>`
 
+#### Task API Enhancements
+- Added `SimpleTask<T>` type alias for `Task<T, String?, Set<String>>`
+- Support for custom Label and Tags types (enums, custom classes, etc.) with full type safety.
+- Added type-safe state getters (`.success`, `.failure`, `.pending`, etc.) that throw detailed `StateError` if the state doesn't match.
+- Added `effectiveData` getter to retrieve data from current or previous states.
+- Added caching support with `CachingStrategy` enum (none, memoize, temporal).
+  - `execute()` method for cached task execution.
+  - `invalidateCache()` and `refresh()` methods.
+  - Cache persists across state transitions and defaults to 5 minutes for temporal strategy.
 
-## 1.2.0
-- Added `Retry` utility for retrying asynchronous operations with configurable strategies.
-- Added `RetryStrategy` interface and implementations:
-  - `ConstantBackoffStrategy`
-  - `LinearBackoffStrategy`
-  - `ExponentialBackoffStrategy`
+#### Utilities
+- **Retry**: Added `Retry` utility for retrying asynchronous operations with configurable strategies.
+  - Strategies: `ConstantBackoffStrategy`, `LinearBackoffStrategy`, `ExponentialBackoffStrategy`.
+- **Interval**: Added generic `Interval` class for ranges of comparable values (int, double, DateTime).
+  - Validation, set operations (`contains`, `overlaps`, `intersection`, `span`), and utility extensions.
+- **Stream Transformers**: Added powerful stream transformation utilities:
+  - `StringSplitter`: Split string streams by separator.
+  - `Debounce`: Filter rapid-fire events.
+  - `Throttle`: Limit event rate.
+  - `BufferCount` and `BufferTime`: Batch processing.
 
 ## 1.1.0
 
