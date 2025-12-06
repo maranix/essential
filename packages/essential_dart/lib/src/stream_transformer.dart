@@ -4,7 +4,7 @@ const _kNewLineCharacter = '\n';
 
 /// A [StreamTransformer] that splits a [Stream] of [String]s into lines.
 ///
-/// This transformer is similar to [LineSplitter] but it allows specifying a
+/// This transformer is similar to `LineSplitter` but it allows specifying a
 /// custom [separator] which can be a single character or a multi-character
 /// string.
 ///

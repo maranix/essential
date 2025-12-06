@@ -710,7 +710,7 @@ extension TaskInstanceTransitionX<T, Label, Tags> on Task<T, Label, Tags> {
 }
 
 extension TaskInstanceTransformX<T, Label, Tags> on Task<T, Label, Tags> {
-  /// Transform data for all states, producing Task<U, Label, Tags>
+  /// Transform data for all states, producing Task&lt;U, Label, Tags&gt;
   Task<U, Label, Tags> mapData<U>(U Function(T data) transform) =>
       switch (this) {
         TaskSuccess(data: final d) => TaskSuccess(

@@ -36,6 +36,11 @@
   - `Throttle`: Limit event rate by ignoring events within time window
   - `BufferCount`: Collect items into fixed-size batches
   - `BufferTime`: Collect items over time intervals
+- **Interval**: Added generic `Interval` class for working with ranges of comparable values (int, double, DateTime, etc.) with support for:
+  - Validation (`Interval.checked`)
+  - Set operations (`contains`, `containsInterval`, `overlaps`, `intersection`, `span`)
+  - Utility extensions for `num` (length) and `DateTime` (duration)
+
 
 ## 1.3.0
 

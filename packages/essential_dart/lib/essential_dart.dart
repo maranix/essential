@@ -111,6 +111,7 @@
 
 library;
 
+export 'src/interval.dart';
 export 'src/memoizer.dart';
 export 'src/retry.dart';
 export 'src/stream_transformer.dart';

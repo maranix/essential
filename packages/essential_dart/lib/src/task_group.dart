@@ -208,15 +208,9 @@ sealed class TaskGroup<T, Label, Tags> {
   ///
   /// Example:
   /// ```dart
-  /// final task = group.getTask<TaskSuccess<User>>(user-1');\n  /// ```
-  /// Gets the task with the given [key].
-  ///
-  /// Returns the task if it exists and matches type [S].
-  /// Throws [TypeError] if the task exists but is not of type [S].
-  ///
-  /// Example:
-  /// ```dart
-  /// final task = group.getTask<TaskSuccess<User, String?, Set<String>>>('user-1');
+  /// final task = group.getTask<TaskSuccess<User, String?, Set<String>>>(
+  ///   'user-1',
+  /// );
   /// ```
   S? getTask<S extends Task<T, Label, Tags>>(String key);
 
@@ -365,8 +359,12 @@ final class _HomogeneousTaskGroup<T, Label, Tags>
   @override
   S? getTask<S extends Task<T, Label, Tags>>(String key) {
     final task = tasks[key];
-    if (task == null) return null;
-    if (task is S) return task;
+    if (task == null) {
+      return null;
+    }
+    if (task is S) {
+      return task;
+    }
     throw TypeError();
   }
 
@@ -463,8 +461,12 @@ final class _HeterogeneousTaskGroup<Label, Tags>
   @override
   S? getTask<S extends Task<Object?, Label, Tags>>(String key) {
     final task = tasks[key];
-    if (task == null) return null;
-    if (task is S) return task;
+    if (task == null) {
+      return null;
+    }
+    if (task is S) {
+      return task;
+    }
     throw TypeError();
   }
 
@@ -645,7 +647,7 @@ extension TaskGroupHomogeneousOpsX<T, Label, Tags>
     // First, mark all as running
     final currentGroup = toRunning();
 
-    // TODO: Implement parallel execution or sequential?
+    // TODO(maranix): Implement parallel execution or sequential?
     // For now, let's do parallel execution
     final futures = currentGroup.tasks.entries.map((entry) async {
       try {
@@ -791,13 +793,6 @@ extension TaskGroupTransitionsX<T, Label, Tags> on TaskGroup<T, Label, Tags> {
 }
 
 /// Extension providing stream-based operations for homogeneous [TaskGroup<T>].
-///
-/// TODO: Implement stream support for watching group state changes
-/// Note: This is optional and can be implemented later
-/// Extension providing stream-based operations for homogeneous [TaskGroup<T>].
-///
-/// TODO: Implement stream support for watching group state changes
-/// Note: This is optional and can be implemented later
 extension TaskGroupStreamX<T, Label, Tags> on TaskGroup<T, Label, Tags> {
   /// Watches the execution of all tasks, emitting [TaskGroup] states as they change.
   ///

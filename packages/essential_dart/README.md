@@ -263,9 +263,34 @@ final networkRetry = Retry(
 );
 
 // Use the same retry configuration across multiple operations
-await networkRetry(() => fetchUser());
-await networkRetry(() => fetchPosts());
 await networkRetry(() => fetchComments());
+```
+
+### Interval
+
+Work with generic ranges of comparable values (int, double, DateTime, etc.):
+
+```dart
+// Integer intervals
+final range = Interval(1, 10);
+print(range.contains(5)); // true
+print(range.length);      // 9 (for num/int)
+
+// DateTime intervals
+final period = Interval(
+  DateTime(2023, 1, 1),
+  DateTime(2023, 1, 31),
+);
+print(period.duration.inDays); // 30
+
+// Set operations
+final a = Interval(10, 20);
+final b = Interval(15, 25);
+
+if (a.overlaps(b)) {
+  final intersection = a.intersection(b); // [15, 20]
+  final span = a.span(b);                 // [10, 25]
+}
 ```
 
 ### Stream Transformers
