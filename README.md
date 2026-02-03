@@ -1,3 +1,6 @@
+> **Note:** <br/>
+  This package has been discontinued in favour of [daxle](https://www.github.com/maranix/daxle)
+
 # Essential Workspace
 
 This workspace contains a collection of reusable building blocks designed to improve development efficiency and overall code quality in Dart and Flutter projects.
